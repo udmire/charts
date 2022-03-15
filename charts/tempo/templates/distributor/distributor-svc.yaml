@@ -1,0 +1,71 @@
+{{- if .Values.distributor.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tempo.distributorFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tempo.distributorLabels" . | nindent 4 }}
+    {{- with .Values.distributor.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- toYaml .Values.distributor.service.annotations | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.config.server.httpListenPort }}
+      protocol: TCP
+      name: http-metrics
+      targetPort: http-metrics
+    {{- if .Values.config.traces.jaeger.thriftCompact }}
+    - name: jaeger-compact
+      port: 6831
+      targetPort: jaeger-compact
+      protocol: UDP
+    {{- end }}
+    {{- if .Values.config.traces.jaeger.thriftBinary }}
+    - name: jaeger-binary
+      port: 6832
+      targetPort: jaeger-binary
+      protocol: UDP
+    {{- end }}
+    {{- if .Values.config.traces.jaeger.thriftHttp }}
+    - name: jaeger-http
+      port: 14268
+      targetPort: jaeger-http
+      protocol: TCP
+    {{- end }}
+    {{- if .Values.config.traces.jaeger.thriftGrpc }}
+    - name: jaeger-grpc
+      port: 14250
+      targetPort: jaeger-grpc
+      protocol: TCP
+    {{- end }}
+    {{- if .Values.config.traces.zipkin }}
+    - name: zipkin
+      port: 9411
+      targetPort: zipkin
+      protocol: TCP
+    {{- end }}
+    {{- if .Values.config.traces.otlp.http }}
+    - name: otlp-http
+      port: 55681
+      targetPort: otlp-http
+      protocol: TCP
+    {{- end }}
+    {{- if .Values.config.traces.otlp.grpc }}
+    - name: otlp-grpc
+      port: 4317
+      targetPort: otlp-grpc
+      protocol: TCP
+    {{- end }}
+    {{- if .Values.config.traces.opencensus }}
+    - name: opencensus
+      port: 55678
+      targetPort: opencensus
+      protocol: TCP
+    {{- end }}
+  selector:
+    {{- include "tempo.distributorSelectorLabels" . | nindent 4 }}
+{{- end }}

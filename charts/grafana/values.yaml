@@ -1,0 +1,152 @@
+# Default values for grafana.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+image:
+  repository: grafana/grafana
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "8.4.3"
+# -- Kubernetes cluster DNS domain
+clusterDomain: cluster.local
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+config:
+  server: 
+    httpListenPort: 3000
+
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+grafana:
+  enabled: true
+  replicas: 2
+
+  service:
+    annotations: {}
+    labels: {}
+
+  serviceAccount:
+    # -- "" disables the individual serviceAccount and uses the global serviceAccount for that component
+    name: ""
+
+  serviceMonitor:
+    enabled: false
+    additionalLabels: {}
+    relabelings: []
+    metricRelabelings: []
+    # -- Additional endpoint configuration https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
+    extraEndpointSpec: {}
+
+  resources: {}
+
+  # -- Additional Cortex container arguments, e.g. log.level (debug, info, warn, error)
+  extraArgs: {}
+
+  # -- Pod Labels
+  podLabels: {}
+
+  # -- Pod Annotations
+  podAnnotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '8080'
+
+  nodeSelector: {}
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                    - grafana
+            topologyKey: 'kubernetes.io/hostname'
+
+  annotations: {}
+
+  autoscaling:
+    # -- Creates a HorizontalPodAutoscaler for the grafana pods.
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 30
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 0  # 80
+    # -- Ref: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#support-for-configurable-scaling-behavior
+    behavior: {}
+
+  persistentVolume:
+    subPath:
+
+  startupProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    failureThreshold: 10
+  livenessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+
+  securityContext: {}
+
+  containerSecurityContext:
+    enabled: true
+    readOnlyRootFilesystem: true
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+
+  terminationGracePeriodSeconds: 60
+
+  tolerations: []
+
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraPorts: []
+  env: []
+  lifecycle: {}
+
+redis:
+  enabled: true
+  architecture: "replication"
+  auth:
+    enabled: false
+    sentinel: false
+  sentinel:
+    enabled: true

@@ -1,0 +1,14 @@
+{{- if and (gt (int .Values.compactor.replicas) 1) (.Values.compactor.podDisruptionBudget) }}
+apiVersion: {{ include "loki.pdbVersion" . }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "loki.compactorFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "loki.compactorLabels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "loki.compactorSelectorLabels" . | nindent 6 }}
+  {{- toYaml .Values.compactor.podDisruptionBudget | nindent 2 }}
+{{- end }}

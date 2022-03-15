@@ -1,0 +1,33 @@
+apiVersion: v2
+name: cortex
+description: Horizontally scalable, highly available, multi-tenant, long term Prometheus.
+version: 0.1.0
+appVersion: 1.16.0
+home: https://cortexmetrics.io/
+kubeVersion: ^1.19.0-0
+dependencies:
+  - name: memcached
+    alias: memcached-frontend
+    version: 5.15.14
+    repository: https://charts.bitnami.com/bitnami
+    condition: memcached-frontend.enabled
+  - name: memcached
+    alias: memcached-blocks-index
+    version: 5.15.14
+    repository: https://charts.bitnami.com/bitnami
+    condition: memcached-blocks-index.enabled
+  - name: memcached
+    alias: memcached-blocks-chunk
+    version: 5.15.14
+    repository: https://charts.bitnami.com/bitnami
+    condition: memcached-blocks-chunk.enabled
+  - name: memcached
+    alias: memcached-blocks-metadata
+    version: 5.15.14
+    repository: https://charts.bitnami.com/bitnami
+    condition: memcached-blocks-metadata.enabled
+  - name: minio
+    alias: minio
+    version: 8.0.9
+    repository: https://helm.min.io/
+    condition: minio.enabled

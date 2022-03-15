@@ -1,0 +1,14 @@
+{{- if and (gt (int .Values.query_frontend.replicas) 1) (.Values.query_frontend.podDisruptionBudget) (.Values.query_frontend.enabled) }}
+apiVersion: {{ include "tempo.pdbVersion" . }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "tempo.queryFrontendFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tempo.queryFrontendLabels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "tempo.queryFrontendSelectorLabels" . | nindent 6 }}
+  {{- toYaml .Values.query_frontend.podDisruptionBudget | nindent 2 }}
+{{- end }}

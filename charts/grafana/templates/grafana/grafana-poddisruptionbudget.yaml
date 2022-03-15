@@ -1,0 +1,14 @@
+{{- if and (gt (int .Values.grafana.replicas) 1) (.Values.grafana.podDisruptionBudget) }}
+apiVersion: {{ include "grafana.pdbVersion" . }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "grafana.grafanaFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "grafana.grafanaLabels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "grafana.grafanaSelectorLabels" . | nindent 6 }}
+  {{- toYaml .Values.grafana.podDisruptionBudget | nindent 2 }}
+{{- end }}

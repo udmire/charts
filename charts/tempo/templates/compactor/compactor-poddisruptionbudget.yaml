@@ -1,0 +1,14 @@
+{{- if and (gt (int .Values.compactor.replicas) 1) (.Values.compactor.podDisruptionBudget) }}
+apiVersion: {{ include "tempo.pdbVersion" . }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "tempo.compactorFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tempo.compactorLabels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "tempo.compactorSelectorLabels" . | nindent 6 }}
+  {{- toYaml .Values.compactor.podDisruptionBudget | nindent 2 }}
+{{- end }}

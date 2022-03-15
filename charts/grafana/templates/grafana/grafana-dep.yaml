@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "grafana.grafanaFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "grafana.grafanaLabels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.grafana.annotations | nindent 4 }}
+spec:
+  {{- if not .Values.grafana.autoscaling.enabled }}
+  replicas: {{ .Values.grafana.replicas }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "grafana.grafanaSelectorLabels" . | nindent 6 }}
+  strategy:
+    {{- toYaml .Values.grafana.strategy | nindent 4 }}
+  template:
+    metadata:
+      labels:
+        {{- include "grafana.grafanaLabels" . | nindent 8 }}
+        {{- with .Values.grafana.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        checksum/config: {{ include "grafana.configChecksum" . }}
+        {{- with .Values.grafana.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.grafana.serviceAccount.name | default (include "grafana.serviceAccountName" . ) }}
+      {{- if .Values.grafana.priorityClassName }}
+      priorityClassName: {{ .Values.grafana.priorityClassName }}
+      {{- end }}
+      {{- if .Values.grafana.securityContext.enabled }}
+      securityContext: {{- omit .Values.grafana.securityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- toYaml .Values.grafana.initContainers | nindent 8 }}
+      {{- if .Values.image.pullSecrets }}
+      imagePullSecrets:
+      {{- range .Values.image.pullSecrets }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      containers:
+        - name: grafana
+          image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - "-config=/etc/grafana/grafana.ini"
+          {{- range $key, $value := .Values.grafana.extraArgs }}
+            - "-{{ $key }}={{ $value }}"
+          {{- end }}
+          volumeMounts:
+            {{- if .Values.grafana.extraVolumeMounts }}
+            {{- toYaml .Values.grafana.extraVolumeMounts | nindent 12}}
+            {{- end }}
+            - name: config
+              mountPath: /etc/grafana
+            - mountPath: /var/lib/grafana
+              name: grafana-storage
+          ports:
+            - name: http-metrics
+              containerPort: {{ .Values.config.server.httpListenPort }}
+              protocol: TCP
+          startupProbe:
+            {{- toYaml .Values.grafana.startupProbe | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.grafana.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.grafana.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.grafana.resources | nindent 12 }}
+          {{- if .Values.grafana.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.grafana.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.grafana.env }}
+          env:
+            {{- toYaml .Values.grafana.env | nindent 12 }}
+          {{- end }}
+          {{- with .Values.grafana.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- if .Values.grafana.extraContainers }}
+      {{- toYaml .Values.grafana.extraContainers | nindent 8}}
+      {{- end }}
+      nodeSelector:
+        {{- toYaml .Values.grafana.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.grafana.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.grafana.tolerations | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.grafana.terminationGracePeriodSeconds }}
+      volumes:
+        {{- include "grafana.configVolume" . | nindent 8 }}
+        - emptyDir: {}
+          name: grafana-storage
+        {{- if .Values.grafana.extraVolumes }}
+        {{- toYaml .Values.grafana.extraVolumes | nindent 8}}
+        {{- end }}

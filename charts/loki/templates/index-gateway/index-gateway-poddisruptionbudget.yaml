@@ -1,0 +1,14 @@
+{{- if and (gt (int .Values.index_gateway.replicas) 1) (.Values.index_gateway.podDisruptionBudget) }}
+apiVersion: {{ include "loki.pdbVersion" . }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "loki.indexGatewayFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "loki.indexGatewayLabels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "loki.indexGatewaySelectorLabels" . | nindent 6 }}
+  {{- toYaml .Values.index_gateway.podDisruptionBudget | nindent 2 }}
+{{- end }}

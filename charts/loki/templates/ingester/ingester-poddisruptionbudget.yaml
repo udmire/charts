@@ -1,0 +1,14 @@
+{{- if and (gt (int .Values.ingester.replicas) 1) (.Values.ingester.podDisruptionBudget) (.Values.ingester.enabled) }}
+apiVersion: {{ include "loki.pdbVersion" . }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "loki.ingesterFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "loki.ingesterLabels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "loki.ingesterSelectorLabels" . | nindent 6 }}
+  {{- toYaml .Values.ingester.podDisruptionBudget | nindent 2 }}
+{{- end }}

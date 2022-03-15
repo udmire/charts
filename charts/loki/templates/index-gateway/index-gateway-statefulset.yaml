@@ -1,0 +1,140 @@
+{{- if .Values.index_gateway.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "loki.indexGatewayFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "loki.indexGatewayLabels" . | nindent 4 }}
+    app.kubernetes.io/part-of: memberlist
+  annotations:
+    {{- toYaml .Values.index_gateway.annotations | nindent 4 }}
+spec:
+  {{- if not .Values.index_gateway.autoscaling.enabled }}
+  replicas: {{ .Values.index_gateway.replicas }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "loki.indexGatewaySelectorLabels" . | nindent 6 }}
+  updateStrategy:
+    {{- toYaml .Values.index_gateway.statefulStrategy | nindent 4 }}          
+  serviceName: {{ template "loki.fullname" . }}-index-gateway-headless
+  volumeClaimTemplates:
+    - metadata:
+        name: storage
+        {{- if .Values.index_gateway.persistentVolume.annotations }}
+        annotations:
+          {{ toYaml .Values.index_gateway.persistentVolume.annotations | nindent 10 }}
+        {{- end }}
+      spec:
+        {{- if .Values.index_gateway.persistentVolume.storageClass }}
+        {{- if (eq "-" .Values.index_gateway.persistentVolume.storageClass) }}
+        storageClassName: ""
+        {{- else }}
+        storageClassName: "{{ .Values.index_gateway.persistentVolume.storageClass }}"
+        {{- end }}
+        {{- end }}
+        accessModes:
+          {{ toYaml .Values.index_gateway.persistentVolume.accessModes | nindent 10 }}
+        resources:
+          requests:
+            storage: "{{ .Values.index_gateway.persistentVolume.size }}"
+  template:
+    metadata:
+      labels:
+        {{- include "loki.indexGatewaySelectorLabels" . | nindent 8 }}
+        app.kubernetes.io/part-of: memberlist
+        {{- with .Values.index_gateway.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        checksum/config: {{ include "loki.configChecksum" . }}
+        {{- with .Values.index_gateway.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.index_gateway.serviceAccount.name | default (include "loki.serviceAccountName" . ) }}
+      {{- if .Values.index_gateway.priorityClassName }}
+      priorityClassName: {{ .Values.index_gateway.priorityClassName }}
+      {{- end }}
+      {{- if .Values.index_gateway.securityContext.enabled }}
+      securityContext: {{- omit .Values.index_gateway.securityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- toYaml .Values.index_gateway.initContainers | nindent 8 }}
+      {{- if .Values.image.pullSecrets }}
+      imagePullSecrets:
+      {{- range .Values.image.pullSecrets }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      nodeSelector:
+        {{- toYaml .Values.index_gateway.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.index_gateway.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.index_gateway.tolerations | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.index_gateway.terminationGracePeriodSeconds }}
+      volumes:
+        {{- include "loki.configVolume" . | nindent 8 }}
+        {{- if .Values.index_gateway.extraVolumes }}
+        {{- toYaml .Values.index_gateway.extraVolumes | nindent 8 }}
+        {{- end }}
+      containers:
+        {{- if .Values.index_gateway.extraContainers }}
+        {{- toYaml .Values.index_gateway.extraContainers | nindent 8 }}
+        {{- end }}
+        - name: index-gateway
+          image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - -config.file=/etc/loki/loki.yaml
+            - -target=index-gateway
+            {{- range $key, $value := .Values.index_gateway.extraArgs }}
+            - "-{{ $key }}={{ $value }}"
+            {{- end }}            
+          volumeMounts:
+            {{- if .Values.index_gateway.extraVolumeMounts }}
+            {{- toYaml .Values.index_gateway.extraVolumeMounts | nindent 12}}
+            {{- end }}
+            - name: config
+              mountPath: /etc/loki/
+            - name: storage
+              mountPath: /data
+              {{- with .Values.index_gateway.persistentVolume.subPath }}
+              subPath: {{ . }}
+              {{- end }}
+          ports:
+            - name: http-metrics
+              containerPort: {{ .Values.config.server.httpListenPort }}
+              protocol: TCP
+            - name: grpc
+              containerPort: {{ .Values.config.server.grpcListenPort }}
+              protocol: TCP
+            - name: gossip
+              containerPort: {{ .Values.config.memberlist.bindPort }}
+              protocol: TCP
+          {{- if .Values.index_gateway.startupProbe }}
+          startupProbe:
+            {{- toYaml .Values.index_gateway.startupProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.index_gateway.livenessProbe }}
+          livenessProbe:
+            {{- toYaml .Values.index_gateway.livenessProbe | nindent 12 }}
+          {{- end }}
+          readinessProbe:
+            {{- toYaml .Values.index_gateway.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.index_gateway.resources | nindent 12 }}
+          {{- if .Values.index_gateway.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.index_gateway.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.index_gateway.env }}
+          env:
+            {{- toYaml .Values.index_gateway.env | nindent 12 }}
+          {{- end }}
+          {{- with .Values.index_gateway.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+{{- end -}}

@@ -1,0 +1,29 @@
+{{- if .Values.query_frontend.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tempo.queryFrontendFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tempo.queryFrontendLabels" . | nindent 4 }}
+    {{- with .Values.query_frontend.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- toYaml .Values.query_frontend.service.annotations | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.config.server.httpListenPort }}
+      protocol: TCP
+      name: http-metrics
+      targetPort: http-metrics
+    # - name: tempo-query-jaeger-ui
+    #   port: 16686
+    #   targetPort: 16686
+    # - name: tempo-query-metrics
+    #   port: 16687
+    #   targetPort: jaeger-metrics
+  selector:
+    {{- include "tempo.queryFrontendSelectorLabels" . | nindent 4 }}
+{{- end -}}

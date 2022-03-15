@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "grafana.grafanaFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "grafana.grafanaLabels" . | nindent 4 }}
+    {{- with .Values.grafana.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- toYaml .Values.grafana.service.annotations | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.config.server.httpListenPort }}
+      protocol: TCP
+      name: http-metrics
+      targetPort: http-metrics
+  selector:
+    {{- include "grafana.grafanaSelectorLabels" . | nindent 4 }}

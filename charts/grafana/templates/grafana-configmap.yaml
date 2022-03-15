@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "grafana.fullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "grafana.labels" . | nindent 4 }}
+data:
+  grafana.ini: |-
+    #################################### Server ##############################
+    [server]
+    # The HTTP port  to use
+    ;http_port = {{ .Values.config.server.httpListenPort }}
+    
+    # enable gzip
+    enable_gzip = true
+
+    {{- if .Values.redis.enabled }}
+    [live]
+    max_connections = 100
+    ha_engine = "redis"
+    ha_engine_address = "{{ .Release.Name }}-redis.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:6379"
+    {{- end }}

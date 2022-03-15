@@ -1,0 +1,42 @@
+{{- if and .Values.grafana.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "grafana.grafanaFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "grafana.grafanaLabels" . | nindent 4 }}
+    {{- if .Values.grafana.serviceMonitor.additionalLabels }}
+{{ toYaml .Values.grafana.serviceMonitor.additionalLabels | indent 4 }}
+    {{- end }}
+  {{- if .Values.grafana.serviceMonitor.annotations }}
+  annotations:
+{{ toYaml .Values.grafana.serviceMonitor.annotations | indent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "grafana.grafanaSelectorLabels" . | nindent 6 }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace | quote }}
+  endpoints:
+  - port: http-metrics
+    {{- if .Values.grafana.serviceMonitor.interval }}
+    interval: {{ .Values.grafana.serviceMonitor.interval }}
+    {{- end }}
+    {{- if .Values.grafana.serviceMonitor.scrapeTimeout }}
+    scrapeTimeout: {{ .Values.grafana.serviceMonitor.scrapeTimeout }}
+    {{- end }}
+    {{- if .Values.grafana.serviceMonitor.relabelings }}
+    relabelings:
+    {{- toYaml .Values.grafana.serviceMonitor.relabelings | nindent 4 }}
+    {{- end }}
+    {{- if .Values.grafana.serviceMonitor.metricRelabelings }}
+    metricRelabelings:
+    {{- toYaml .Values.grafana.serviceMonitor.metricRelabelings | nindent 4 }}
+    {{- end }}
+    {{- with .Values.grafana.serviceMonitor.extraEndpointSpec }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}

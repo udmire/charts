@@ -1,0 +1,14 @@
+{{- if and (gt (int .Values.query_frontend.replicas) 1) (.Values.query_frontend.podDisruptionBudget) (.Values.query_frontend.enabled) }}
+apiVersion: {{ include "loki.pdbVersion" . }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "loki.queryFrontendFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "loki.queryFrontendLabels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "loki.queryFrontendSelectorLabels" . | nindent 6 }}
+  {{- toYaml .Values.query_frontend.podDisruptionBudget | nindent 2 }}
+{{- end }}

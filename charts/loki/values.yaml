@@ -1,0 +1,1034 @@
+# Default values for loki.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+image:
+  repository: grafana/loki
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "2.4.2"
+
+# -- Kubernetes cluster DNS domain
+clusterDomain: cluster.local
+revisionHistoryLimit: 10
+
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+config:
+  server: 
+    httpListenPort: 3200
+    grpcListenPort: 9095
+  memberlist:
+    bindPort: 7946
+  ruler:
+    alertmanager:
+      alertmanager_url: https://alertmanager.xx
+      external_url: https://alertmanager.xx
+      enable_alertmanager_discovery: false
+      # url: http://_http-metrics._tcp.{{ .Release.Name }}-alertmanager.{{ .Release.Namespace }}-common/alertmanager/
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+compactor:
+  enabled: true
+  replicas: 2
+
+  service:
+    annotations: {}
+
+  serviceAccount:
+    # -- "" disables the individual serviceAccount and uses the global serviceAccount for that component
+    name: ""
+
+  serviceMonitor:
+    enabled: false
+    additionalLabels: {}
+    relabelings: []
+    metricRelabelings: []
+    # -- Additional endpoint configuration https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
+    extraEndpointSpec: {}
+
+  resources: {}
+
+  # -- Additional Cortex container arguments, e.g. log.level (debug, info, warn, error)
+  extraArgs: {}
+
+  # -- Pod Labels
+  podLabels: {}
+
+  # -- Pod Annotations
+  podAnnotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '8080'
+
+  nodeSelector: {}
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                    - compactor
+            topologyKey: 'kubernetes.io/hostname'
+
+  annotations: {}
+
+  persistentVolume:
+    # -- If true compactor will create/use a Persistent Volume Claim
+    # If false, use emptyDir
+    enabled: true
+
+    # -- compactor data Persistent Volume Claim annotations
+    annotations: {}
+
+    # -- compactor data Persistent Volume access modes
+    # Must match those of existing PV or dynamic provisioner
+    # Ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+    accessModes:
+      - ReadWriteOnce
+
+    # compactor data Persistent Volume size
+    size: 2Gi
+
+    # -- Subdirectory of compactor data Persistent Volume to mount
+    # Useful if the volume's root directory is not empty
+    subPath: ''
+
+    # -- compactor data Persistent Volume Storage Class
+    # If defined, storageClassName: <storageClass>
+    # If set to "-", storageClassName: "", which disables dynamic provisioning
+    # If undefined (the default) or set to null, no storageClassName spec is
+    # set, choosing the default provisioner.
+    storageClass: null
+
+  startupProbe:
+    failureThreshold: 60
+    initialDelaySeconds: 120
+    periodSeconds: 30
+    httpGet:
+      path: /ready
+      port: http-metrics
+      scheme: HTTP
+  livenessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+      scheme: HTTP
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+
+  securityContext: {}
+  containerSecurityContext:
+    enabled: true
+    readOnlyRootFilesystem: true
+
+  strategy:
+    type: RollingUpdate
+
+  terminationGracePeriodSeconds: 240
+
+  tolerations: []
+
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraPorts: []
+  env: []
+
+distributor:
+  enabled: true
+  replicas: 3
+
+  service:
+    annotations: {}
+    labels: {}
+
+  serviceAccount:
+    # -- "" disables the individual serviceAccount and uses the global serviceAccount for that component
+    name: ""
+
+  serviceMonitor:
+    enabled: false
+    additionalLabels: {}
+    relabelings: []
+    metricRelabelings: []
+    # -- Additional endpoint configuration https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
+    extraEndpointSpec: {}
+
+  resources: {}
+
+  # -- Additional Cortex container arguments, e.g. log.level (debug, info, warn, error)
+  extraArgs: {}
+
+  # -- Pod Labels
+  podLabels: {}
+
+  # -- Pod Annotations
+  podAnnotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '8080'
+
+  nodeSelector: {}
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                    - distributor
+            topologyKey: 'kubernetes.io/hostname'
+
+  annotations: {}
+
+  autoscaling:
+    # -- Creates a HorizontalPodAutoscaler for the distributor pods.
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 30
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 0  # 80
+    # -- Ref: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#support-for-configurable-scaling-behavior
+    behavior: {}
+
+  startupProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    failureThreshold: 10
+  livenessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+
+  securityContext: {}
+
+  containerSecurityContext:
+    enabled: true
+    readOnlyRootFilesystem: true
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+
+  terminationGracePeriodSeconds: 60
+
+  tolerations: []
+
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraPorts: []
+  env: []
+  lifecycle: {}
+
+ingester:
+  enabled: true
+  replicas: 3
+
+  statefulSet:
+    # -- ref: https://cortexmetrics.io/docs/guides/ingesters-scaling-up-and-down/#scaling-down and https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#pod-management-policies for scaledown details
+    podManagementPolicy: OrderedReady
+
+  service:
+    annotations: {}
+    labels: {}
+
+  serviceAccount:
+    name:
+
+  serviceMonitor:
+    enabled: false
+    additionalLabels: {}
+    relabelings: []
+    metricRelabelings: []
+    # -- Additional endpoint configuration https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
+    extraEndpointSpec: {}
+
+  resources: {}
+
+  # -- Additional Cortex container arguments, e.g. log.level (debug, info, warn, error)
+  extraArgs: {}
+
+  # -- Pod Labels
+  podLabels: {}
+
+  # -- Pod Annotations
+  podAnnotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '8080'
+
+  nodeSelector: {}
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                    - ingester
+            topologyKey: 'kubernetes.io/hostname'
+
+  annotations: {}
+
+  autoscaling:
+    enabled: false
+    minReplicas: 3
+    maxReplicas: 30
+    targetMemoryUtilizationPercentage: 80
+    behavior:
+      scaleDown:
+        # -- see https://cortexmetrics.io/docs/guides/ingesters-scaling-up-and-down/#scaling-down for scaledown details
+        policies:
+          - type: Pods
+            value: 1
+            # set to no less than 2x the maximum between -blocks-storage.bucket-store.sync-interval and -compactor.cleanup-interval
+            periodSeconds: 1800
+        # -- uses metrics from the past 1h to make scaleDown decisions
+        stabilizationWindowSeconds: 3600
+      scaleUp:
+        # -- This default scaleup policy allows adding 1 pod every 30 minutes.
+        # Ref: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#support-for-configurable-scaling-behavior
+        policies:
+          - type: Pods
+            value: 1
+            periodSeconds: 1800
+
+  lifecycle:
+    # -- The /shutdown preStop hook is recommended as part of the ingester
+    # scaledown process, but can be removed to optimize rolling restarts in
+    # instances that will never be scaled down or when using chunks storage
+    # with WAL disabled.
+    # https://cortexmetrics.io/docs/guides/ingesters-scaling-up-and-down/#scaling-down
+    preStop:
+      httpGet:
+        path: "/ingester/shutdown"
+        port: http-metrics
+
+  persistentVolume:
+    # -- If true and ingester.statefulSet.enabled is true,
+    # Ingester will create/use a Persistent Volume Claim
+    # If false, use emptyDir
+    enabled: true
+
+    # -- Ingester data Persistent Volume Claim annotations
+    annotations: {}
+
+    # -- Ingester data Persistent Volume access modes
+    # Must match those of existing PV or dynamic provisioner
+    # Ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+    accessModes:
+      - ReadWriteOnce
+
+    # -- Ingester data Persistent Volume size
+    size: 2Gi
+
+    # -- Subdirectory of Ingester data Persistent Volume to mount
+    # Useful if the volume's root directory is not empty
+    subPath: ''
+
+    # -- Ingester data Persistent Volume Storage Class
+    # If defined, storageClassName: <storageClass>
+    # If set to "-", storageClassName: "", which disables dynamic provisioning
+    # If undefined (the default) or set to null, no storageClassName spec is
+    # set, choosing the default provisioner.
+    storageClass: null
+
+  # -- Startup/liveness probes for ingesters are not recommended.
+  #  Ref: https://cortexmetrics.io/docs/guides/running-cortex-on-kubernetes/#take-extra-care-with-ingesters
+  startupProbe: {}
+
+  # -- Startup/liveness probes for ingesters are not recommended.
+  #  Ref: https://cortexmetrics.io/docs/guides/running-cortex-on-kubernetes/#take-extra-care-with-ingesters
+  livenessProbe: {}
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+
+  securityContext: {}
+
+  containerSecurityContext:
+    enabled: true
+    readOnlyRootFilesystem: true
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  statefulStrategy:
+    type: RollingUpdate
+
+  terminationGracePeriodSeconds: 240
+
+  tolerations: []
+
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraPorts: []
+  env: []
+
+ruler:
+  enabled: true
+  replicas: 3
+
+  service:
+    annotations: {}
+    labels: {}
+
+  serviceAccount:
+    # -- "" disables the individual serviceAccount and uses the global serviceAccount for that component
+    name: ""
+
+  serviceMonitor:
+    enabled: false
+    additionalLabels: {}
+    relabelings: []
+    metricRelabelings: []
+    # -- Additional endpoint configuration https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
+    extraEndpointSpec: {}
+
+  resources: {}
+
+  # -- Additional Cortex container arguments, e.g. log.level (debug, info, warn, error)
+  extraArgs: {}
+
+  # -- Pod Labels
+  podLabels: {}
+
+  # -- Pod Annotations
+  podAnnotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '8080'
+
+  nodeSelector: {}
+  affinity: {}
+  annotations: {}
+
+  startupProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    failureThreshold: 10
+  livenessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+
+  securityContext: {}
+
+  containerSecurityContext:
+    enabled: true
+    readOnlyRootFilesystem: true
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+
+  terminationGracePeriodSeconds: 180
+
+  tolerations: []
+
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraPorts: []
+  env: []
+
+querier:
+  enabled: true
+  replicas: 4
+
+  service:
+    annotations: {}
+    labels: {}
+
+  serviceAccount:
+    # -- "" disables the individual serviceAccount and uses the global serviceAccount for that component
+    name: ""
+
+  serviceMonitor:
+    enabled: false
+    additionalLabels: {}
+    relabelings: []
+    metricRelabelings: []
+    # -- Additional endpoint configuration https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
+    extraEndpointSpec: {}
+
+  resources: {}
+
+  # -- Additional Cortex container arguments, e.g. log.level (debug, info, warn, error)
+  extraArgs: {}
+
+  # -- Pod Labels
+  podLabels: {}
+
+  # -- Pod Annotations
+  podAnnotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '8080'
+
+  nodeSelector: {}
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                    - querier
+            topologyKey: 'kubernetes.io/hostname'
+
+  annotations: {}
+
+  autoscaling:
+    # -- Creates a HorizontalPodAutoscaler for the querier pods.
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 30
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 0  # 80
+    # -- Ref: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#support-for-configurable-scaling-behavior
+    behavior: {}
+
+  startupProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    failureThreshold: 10
+  livenessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+
+  securityContext: {}
+
+  containerSecurityContext:
+    enabled: true
+    readOnlyRootFilesystem: true
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+
+  terminationGracePeriodSeconds: 180
+
+  tolerations: []
+
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraPorts: []
+  env: []
+  lifecycle: {}
+
+query_frontend:
+  enabled: true
+  replicas: 2
+
+  service:
+    annotations: {}
+    labels: {}
+
+  serviceAccount:
+    # -- "" disables the individual serviceAccount and uses the global serviceAccount for that component
+    name: ""
+
+  serviceMonitor:
+    enabled: false
+    additionalLabels: {}
+    relabelings: []
+    metricRelabelings: []
+    # -- Additional endpoint configuration https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
+    extraEndpointSpec: {}
+
+  resources: {}
+
+  # -- Additional Cortex container arguments, e.g. log.level (debug, info, warn, error)
+  extraArgs: {}
+
+  # -- Pod Labels
+  podLabels: {}
+
+  # -- Pod Annotations
+  podAnnotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '8080'
+
+  autoscaling:
+    # -- Creates a HorizontalPodAutoscaler for the distributor pods.
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 30
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 0  # 80
+    # -- Ref: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#support-for-configurable-scaling-behavior
+    behavior: {}
+
+  nodeSelector: {}
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                    - query-frontend
+            topologyKey: 'kubernetes.io/hostname'
+
+  annotations: {}
+  
+  startupProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    failureThreshold: 10
+  livenessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+
+  securityContext: {}
+  containerSecurityContext:
+    enabled: true
+    readOnlyRootFilesystem: true
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+
+  terminationGracePeriodSeconds: 180
+
+  tolerations: []
+
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraPorts: []
+  env: []
+  lifecycle: {}
+
+query_scheduler:
+  enabled: true
+  replicas: 2
+
+  service:
+    annotations: {}
+    labels: {}
+
+  serviceAccount:
+    # -- "" disables the individual serviceAccount and uses the global serviceAccount for that component
+    name: ""
+
+  serviceMonitor:
+    enabled: false
+    additionalLabels: {}
+    relabelings: []
+    metricRelabelings: []
+    # -- Additional endpoint configuration https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
+    extraEndpointSpec: {}
+
+  resources: {}
+
+  # -- Additional Cortex container arguments, e.g. log.level (debug, info, warn, error)
+  extraArgs: {}
+
+  # -- Pod Labels
+  podLabels: {}
+
+  # -- Pod Annotations
+  podAnnotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '8080'
+
+  nodeSelector: {}
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                    - query-scheduler
+            topologyKey: 'kubernetes.io/hostname'
+
+  annotations: {}
+  
+  startupProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    failureThreshold: 10
+  livenessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+
+  securityContext: {}
+  containerSecurityContext:
+    enabled: true
+    readOnlyRootFilesystem: true
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+
+  terminationGracePeriodSeconds: 180
+
+  tolerations: []
+
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraPorts: []
+  env: []
+  lifecycle: {}
+
+index_gateway:
+  enabled: true
+  replicas: 3
+
+  service:
+    annotations: {}
+    labels: {}
+
+  serviceAccount:
+    # -- "" disables the individual serviceAccount and uses the global serviceAccount for that component
+    name: ""
+
+  serviceMonitor:
+    enabled: false
+    additionalLabels: {}
+    relabelings: []
+    metricRelabelings: []
+    # -- Additional endpoint configuration https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
+    extraEndpointSpec: {}
+
+  resources: {}
+
+  # -- Additional Cortex container arguments, e.g. log.level (debug, info, warn, error)
+  extraArgs: {}
+
+  # -- Pod Labels
+  podLabels: {}
+
+  # -- Pod Annotations
+  podAnnotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '8080'
+
+  nodeSelector: {}
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                    - query-scheduler
+            topologyKey: 'kubernetes.io/hostname'
+
+  autoscaling:
+    enabled: false
+    minReplicas: 3
+    maxReplicas: 30
+    targetMemoryUtilizationPercentage: 80
+    behavior:
+      scaleDown:
+        # -- see https://cortexmetrics.io/docs/guides/ingesters-scaling-up-and-down/#scaling-down for scaledown details
+        policies:
+          - type: Pods
+            value: 1
+            # set to no less than 2x the maximum between -blocks-storage.bucket-store.sync-interval and -compactor.cleanup-interval
+            periodSeconds: 1800
+        # -- uses metrics from the past 1h to make scaleDown decisions
+        stabilizationWindowSeconds: 3600
+      scaleUp:
+        # -- This default scaleup policy allows adding 1 pod every 30 minutes.
+        # Ref: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#support-for-configurable-scaling-behavior
+        policies:
+          - type: Pods
+            value: 1
+            periodSeconds: 1800
+
+  annotations: {}
+  
+  persistentVolume:
+    # -- If true compactor will create/use a Persistent Volume Claim
+    # If false, use emptyDir
+    enabled: true
+
+    # -- compactor data Persistent Volume Claim annotations
+    annotations: {}
+
+    # -- compactor data Persistent Volume access modes
+    # Must match those of existing PV or dynamic provisioner
+    # Ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+    accessModes:
+      - ReadWriteOnce
+
+    # compactor data Persistent Volume size
+    size: 2Gi
+
+    # -- Subdirectory of compactor data Persistent Volume to mount
+    # Useful if the volume's root directory is not empty
+    subPath: ''
+
+    # -- compactor data Persistent Volume Storage Class
+    # If defined, storageClassName: <storageClass>
+    # If set to "-", storageClassName: "", which disables dynamic provisioning
+    # If undefined (the default) or set to null, no storageClassName spec is
+    # set, choosing the default provisioner.
+    storageClass: null
+
+  startupProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    failureThreshold: 10
+  livenessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+
+  securityContext: {}
+  containerSecurityContext:
+    enabled: true
+    readOnlyRootFilesystem: true
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+
+  terminationGracePeriodSeconds: 180
+
+  tolerations: []
+
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraPorts: []
+  env: []
+  lifecycle: {}
+
+memcached-frontend:
+  enabled: false
+  architecture: "high-availability"
+  replicaCount: 2
+  resources: {}
+  extraEnv:
+    # -- MEMCACHED_CACHE_SIZE is the amount of memory allocated to memcached for object storage
+    - name: MEMCACHED_CACHE_SIZE
+      value: "1024"
+    # -- MEMCACHED_MAX_CONNECTIONS is the maximum number of simultaneous connections to the memcached service
+    - name: MEMCACHED_MAX_CONNECTIONS
+      value: "1024"
+    # -- MEMCACHED_THREADS is the number of threads to use when processing incoming requests.
+    # By default, memcached is configured to use 4 concurrent threads. The threading improves the performance of
+    # storing and retrieving data in the cache, using a locking system to prevent different threads overwriting or updating the same values.
+    - name: MEMCACHED_THREADS
+      value: "4"
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: false
+
+memcached-chunks:
+  enabled: false
+  architecture: "high-availability"
+  replicaCount: 2
+  resources: {}
+  extraEnv:
+    # -- MEMCACHED_CACHE_SIZE is the amount of memory allocated to memcached for object storage
+    - name: MEMCACHED_CACHE_SIZE
+      value: "1024"
+    # -- MEMCACHED_MAX_CONNECTIONS is the maximum number of simultaneous connections to the memcached service
+    - name: MEMCACHED_MAX_CONNECTIONS
+      value: "1024"
+    # -- MEMCACHED_THREADS is the number of threads to use when processing incoming requests.
+    # By default, memcached is configured to use 4 concurrent threads. The threading improves the performance of
+    # storing and retrieving data in the cache, using a locking system to prevent different threads overwriting or updating the same values.
+    - name: MEMCACHED_THREADS
+      value: "4"
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: false
+
+memcached-index-queries:
+  enabled: false
+  architecture: "high-availability"
+  replicaCount: 2
+  resources: {}
+  extraEnv:
+    # -- MEMCACHED_CACHE_SIZE is the amount of memory allocated to memcached for object storage
+    - name: MEMCACHED_CACHE_SIZE
+      value: "1024"
+    # -- MEMCACHED_MAX_CONNECTIONS is the maximum number of simultaneous connections to the memcached service
+    - name: MEMCACHED_MAX_CONNECTIONS
+      value: "1024"
+    # -- MEMCACHED_THREADS is the number of threads to use when processing incoming requests.
+    # By default, memcached is configured to use 4 concurrent threads. The threading improves the performance of
+    # storing and retrieving data in the cache, using a locking system to prevent different threads overwriting or updating the same values.
+    - name: MEMCACHED_THREADS
+      value: "4"
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: false
+
+memcached-index-writes:
+  enabled: false
+  # enabled/disabled via the tags.blocks-storage-memcached boolean
+  architecture: "high-availability"
+  replicaCount: 2
+  resources: {}
+  extraEnv:
+    # -- MEMCACHED_CACHE_SIZE is the amount of memory allocated to memcached for object storage
+    - name: MEMCACHED_CACHE_SIZE
+      value: "1024"
+    # -- MEMCACHED_MAX_CONNECTIONS is the maximum number of simultaneous connections to the memcached service
+    - name: MEMCACHED_MAX_CONNECTIONS
+      value: "1024"
+    # -- MEMCACHED_THREADS is the number of threads to use when processing incoming requests.
+    # By default, memcached is configured to use 4 concurrent threads. The threading improves the performance of
+    # storing and retrieving data in the cache, using a locking system to prevent different threads overwriting or updating the same values.
+    - name: MEMCACHED_THREADS
+      value: "4"
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: false
+
+minio:
+  enabled: true
+  accessKey: logs
+  secretKey: supersecret
+  buckets:
+    - name: logs-data
+      policy: none
+      purge: false
+    - name: logs-rule
+      policy: none
+      purge: false
+  persistence:
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi

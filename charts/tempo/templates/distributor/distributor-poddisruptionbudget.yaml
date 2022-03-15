@@ -1,0 +1,14 @@
+{{- if and (gt (int .Values.distributor.replicas) 1) (.Values.distributor.podDisruptionBudget) (.Values.distributor.enabled) }}
+apiVersion: {{ include "tempo.pdbVersion" . }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "tempo.distributorFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tempo.distributorLabels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "tempo.distributorSelectorLabels" . | nindent 6 }}
+  {{- toYaml .Values.distributor.podDisruptionBudget | nindent 2 }}
+{{- end }}
