@@ -1,0 +1,141 @@
+apiVersion: v1
+entries:
+  agent:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2022-03-15T05:22:25.98697162Z"
+    description: A Helm chart for Kubernetes
+    digest: b785c434699f04add4e83c5db2e9dd70a9b2d2744f9304a0de2636f174bd506e
+    name: agent
+    type: application
+    urls:
+    - https://udmire.github.io/charts/agent-0.1.0.tgz
+    version: 0.1.0
+  alertmanager:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2022-03-15T05:22:25.99051024Z"
+    dependencies:
+    - alias: minio
+      condition: minio.enabled
+      name: minio
+      repository: https://helm.min.io/
+      version: 8.0.9
+    description: A Helm chart for Kubernetes
+    digest: 1fb23d6c14d677e18d832c96b5d59d6eabe0be5786e71a3f083d744572397fdc
+    name: alertmanager
+    type: application
+    urls:
+    - https://udmire.github.io/charts/alertmanager-0.1.0.tgz
+    version: 0.1.0
+  cortex:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2022-03-15T05:22:25.999723193Z"
+    dependencies:
+    - alias: memcached-frontend
+      condition: memcached-frontend.enabled
+      name: memcached
+      repository: https://charts.bitnami.com/bitnami
+      version: 5.15.14
+    - alias: memcached-blocks-index
+      condition: memcached-blocks-index.enabled
+      name: memcached
+      repository: https://charts.bitnami.com/bitnami
+      version: 5.15.14
+    - alias: memcached-blocks-chunk
+      condition: memcached-blocks-chunk.enabled
+      name: memcached
+      repository: https://charts.bitnami.com/bitnami
+      version: 5.15.14
+    - alias: memcached-blocks-metadata
+      condition: memcached-blocks-metadata.enabled
+      name: memcached
+      repository: https://charts.bitnami.com/bitnami
+      version: 5.15.14
+    - alias: minio
+      condition: minio.enabled
+      name: minio
+      repository: https://helm.min.io/
+      version: 8.0.9
+    description: Horizontally scalable, highly available, multi-tenant, long term
+      Prometheus.
+    digest: 9027254e12a0ea3025a521879ec3d03d1d6bb71cce4b6edf1beec6aed7707c7d
+    home: https://cortexmetrics.io/
+    kubeVersion: ^1.19.0-0
+    name: cortex
+    urls:
+    - https://udmire.github.io/charts/cortex-0.1.0.tgz
+    version: 0.1.0
+  grafana:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2022-03-15T05:22:26.008771744Z"
+    dependencies:
+    - alias: redis
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 16.5.2
+    description: A Helm chart for Kubernetes
+    digest: d3edd89d634322da6998e60b95394435caf61e39e5d91b7b8171cbeed036d5ee
+    name: grafana
+    type: application
+    urls:
+    - https://udmire.github.io/charts/grafana-0.1.0.tgz
+    version: 0.1.0
+  loki:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2022-03-15T05:22:26.018093897Z"
+    dependencies:
+    - alias: memcached-frontend
+      condition: memcached-frontend.enabled
+      name: memcached
+      repository: https://charts.bitnami.com/bitnami
+      version: 5.15.14
+    - alias: memcached-chunks
+      name: memcached
+      repository: https://charts.bitnami.com/bitnami
+      version: 5.15.14
+    - alias: memcached-index-queries
+      name: memcached
+      repository: https://charts.bitnami.com/bitnami
+      version: 5.15.14
+    - alias: memcached-index-writes
+      name: memcached
+      repository: https://charts.bitnami.com/bitnami
+      version: 5.15.14
+    - alias: minio
+      condition: minio.enabled
+      name: minio
+      repository: https://helm.min.io/
+      version: 8.0.9
+    description: A Helm chart for Kubernetes
+    digest: f5f200828c120af22cbaf435135fa2c5efb5d84b845d704d4aed2ffc334617e1
+    name: loki
+    type: application
+    urls:
+    - https://udmire.github.io/charts/loki-0.1.0.tgz
+    version: 0.1.0
+  tempo:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2022-03-15T05:22:26.026783147Z"
+    dependencies:
+    - alias: memcached
+      name: memcached
+      repository: https://charts.bitnami.com/bitnami
+      version: 5.15.14
+    - alias: minio
+      condition: minio.enabled
+      name: minio
+      repository: https://helm.min.io/
+      version: 8.0.9
+    description: A Helm chart for Kubernetes
+    digest: 6758345ad3859c5d1f62141b4a3211b0043305b178d5effe2c8accbf6a6b17a6
+    name: tempo
+    type: application
+    urls:
+    - https://udmire.github.io/charts/tempo-0.1.0.tgz
+    version: 0.1.0
+generated: "2022-03-15T05:22:25.985793413Z"
