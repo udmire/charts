@@ -3,9 +3,9 @@ entries:
   agent:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-03-15T05:22:25.98697162Z"
+    created: "2022-03-15T05:26:47.594712385Z"
     description: A Helm chart for Kubernetes
-    digest: b785c434699f04add4e83c5db2e9dd70a9b2d2744f9304a0de2636f174bd506e
+    digest: c1d22dae547aa7d8d35a150a8faefcad3916016528df57f13b81be19461b193e
     name: agent
     type: application
     urls:
@@ -14,7 +14,7 @@ entries:
   alertmanager:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-03-15T05:22:25.99051024Z"
+    created: "2022-03-15T05:26:47.597231321Z"
     dependencies:
     - alias: minio
       condition: minio.enabled
@@ -22,7 +22,7 @@ entries:
       repository: https://helm.min.io/
       version: 8.0.9
     description: A Helm chart for Kubernetes
-    digest: 1fb23d6c14d677e18d832c96b5d59d6eabe0be5786e71a3f083d744572397fdc
+    digest: 1b6751a332acd61f4e6776f24aed2d38face3449762d4204915b6ae58c6d6499
     name: alertmanager
     type: application
     urls:
@@ -31,7 +31,7 @@ entries:
   cortex:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-03-15T05:22:25.999723193Z"
+    created: "2022-03-15T05:26:47.605886045Z"
     dependencies:
     - alias: memcached-frontend
       condition: memcached-frontend.enabled
@@ -60,7 +60,7 @@ entries:
       version: 8.0.9
     description: Horizontally scalable, highly available, multi-tenant, long term
       Prometheus.
-    digest: 9027254e12a0ea3025a521879ec3d03d1d6bb71cce4b6edf1beec6aed7707c7d
+    digest: f172d2a9f0b2a8f3bab067c7a7116bc2dfb98a7f0e20ad192308ef83e5ffb86d
     home: https://cortexmetrics.io/
     kubeVersion: ^1.19.0-0
     name: cortex
@@ -70,14 +70,14 @@ entries:
   grafana:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-03-15T05:22:26.008771744Z"
+    created: "2022-03-15T05:26:47.612046833Z"
     dependencies:
     - alias: redis
       name: redis
       repository: https://charts.bitnami.com/bitnami
       version: 16.5.2
     description: A Helm chart for Kubernetes
-    digest: d3edd89d634322da6998e60b95394435caf61e39e5d91b7b8171cbeed036d5ee
+    digest: 9d2989c9351b224b7330947efa8513aa1f6b2093452814a1994956110f297c2c
     name: grafana
     type: application
     urls:
@@ -86,7 +86,7 @@ entries:
   loki:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-03-15T05:22:26.018093897Z"
+    created: "2022-03-15T05:26:47.621705772Z"
     dependencies:
     - alias: memcached-frontend
       condition: memcached-frontend.enabled
@@ -111,7 +111,7 @@ entries:
       repository: https://helm.min.io/
       version: 8.0.9
     description: A Helm chart for Kubernetes
-    digest: f5f200828c120af22cbaf435135fa2c5efb5d84b845d704d4aed2ffc334617e1
+    digest: 857fcd708e1c2c7fcd020b57f1cf8a817cf3faab1b48e6f3a799b34c43705ac0
     name: loki
     type: application
     urls:
@@ -120,7 +120,7 @@ entries:
   tempo:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-03-15T05:22:26.026783147Z"
+    created: "2022-03-15T05:26:47.628315467Z"
     dependencies:
     - alias: memcached
       name: memcached
@@ -132,10 +132,10 @@ entries:
       repository: https://helm.min.io/
       version: 8.0.9
     description: A Helm chart for Kubernetes
-    digest: 6758345ad3859c5d1f62141b4a3211b0043305b178d5effe2c8accbf6a6b17a6
+    digest: 55628a802d917aab9011ab964bb43af3d9fe3c18bf5cf6bf094d4177cb19e1a8
     name: tempo
     type: application
     urls:
     - https://udmire.github.io/charts/tempo-0.1.0.tgz
     version: 0.1.0
-generated: "2022-03-15T05:22:25.985793413Z"
+generated: "2022-03-15T05:26:47.59296566Z"
