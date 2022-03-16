@@ -52,8 +52,8 @@ spec:
         {{- end }}
       annotations:
         checksum/config: {{ include "loki.configChecksum" . }}
-        {{- with .Values.ingester.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
+        {{- if .Values.ingester.podAnnotations }}
+        {{- include "contentRender" ( dict "value" .Values.ingester.podAnnotations "context" . ) | nindent 8 }}
         {{- end }}
     spec:
       serviceAccountName: {{ .Values.ingester.serviceAccount.name | default (include "loki.serviceAccountName" . ) }}
@@ -92,8 +92,7 @@ spec:
         {{- toYaml .Values.ingester.extraContainers | nindent 8 }}
         {{- end }}
         - name: ingester
-          image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- include "image" .Values.image.loki | nindent 10 }}
           args:
             - -config.file=/etc/loki/loki.yaml
             - -target=ingester

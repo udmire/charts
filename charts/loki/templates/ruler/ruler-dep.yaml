@@ -27,8 +27,8 @@ spec:
         {{- end }}
       annotations:
         checksum/config: {{ include "loki.configChecksum" . }}
-        {{- with .Values.ruler.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
+        {{- if .Values.ruler.podAnnotations }}
+        {{- include "contentRender" ( dict "value" .Values.ruler.podAnnotations "context" . ) | nindent 8 }}
         {{- end }}
     spec:
       serviceAccountName: {{ .Values.ruler.serviceAccount.name | default (include "loki.serviceAccountName" . ) }}
@@ -48,8 +48,7 @@ spec:
       {{- end }}
       containers:
         - name: ruler
-          image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- include "image" .Values.image.loki | nindent 10 }}
           args:
             - -config.file=/etc/loki/loki.yaml
             - -target=ruler

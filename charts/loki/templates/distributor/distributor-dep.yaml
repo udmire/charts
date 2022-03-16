@@ -29,8 +29,8 @@ spec:
         {{- end }}
       annotations:
         checksum/config: {{ include "loki.configChecksum" . }}
-        {{- with .Values.distributor.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
+        {{- if .Values.distributor.podAnnotations }}
+        {{- include "contentRender" ( dict "value" .Values.distributor.podAnnotations "context" . ) | nindent 8 }}
         {{- end }}
     spec:
       serviceAccountName: {{ .Values.distributor.serviceAccount.name | default (include "loki.serviceAccountName" . ) }}
@@ -50,8 +50,7 @@ spec:
       {{- end }}
       containers:
         - name: distributor
-          image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- include "image" .Values.image.loki | nindent 10 }}
           args:
             - -config.file=/etc/loki/loki.yaml
             - -target=distributor

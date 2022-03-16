@@ -49,8 +49,8 @@ spec:
         {{- end }}
       annotations:
         checksum/config: {{ include "loki.configChecksum" . }}
-        {{- with .Values.index_gateway.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
+        {{- if .Values.index_gateway.podAnnotations }}
+        {{- include "contentRender" ( dict "value" .Values.index_gateway.podAnnotations "context" . ) | nindent 8 }}
         {{- end }}
     spec:
       serviceAccountName: {{ .Values.index_gateway.serviceAccount.name | default (include "loki.serviceAccountName" . ) }}
@@ -85,8 +85,7 @@ spec:
         {{- toYaml .Values.index_gateway.extraContainers | nindent 8 }}
         {{- end }}
         - name: index-gateway
-          image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- include "image" .Values.image.loki | nindent 10 }}
           args:
             - -config.file=/etc/loki/loki.yaml
             - -target=index-gateway

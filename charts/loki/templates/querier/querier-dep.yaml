@@ -28,8 +28,8 @@ spec:
         {{- end }}
       annotations:
         checksum/config: {{ include "loki.configChecksum" . }}
-        {{- with .Values.querier.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
+        {{- if .Values.querier.podAnnotations }}
+        {{- include "contentRender" ( dict "value" .Values.querier.podAnnotations "context" . ) | nindent 8 }}
         {{- end }}
     spec:
       serviceAccountName: {{ .Values.querier.serviceAccount.name | default (include "loki.serviceAccountName" . ) }}
@@ -49,8 +49,7 @@ spec:
       {{- end }}
       containers:
         - name: querier
-          image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- include "image" .Values.image.loki | nindent 10 }}
           args:
             - -config.file=/etc/loki/loki.yaml
             - -target=querier

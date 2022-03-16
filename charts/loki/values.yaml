@@ -2,10 +2,11 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 image:
-  repository: grafana/loki
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "2.4.2"
+  loki:
+    registry: ""
+    repository: grafana/loki
+    tag: "2.4.2"
+    pullPolicy: IfNotPresent
 
 # -- Kubernetes cluster DNS domain
 clusterDomain: cluster.local
@@ -80,7 +81,7 @@ compactor:
   # -- Pod Annotations
   podAnnotations:
     prometheus.io/scrape: 'true'
-    prometheus.io/port: '8080'
+    prometheus.io/port: '{{ .Values.config.server.httpListenPort }}'
 
   nodeSelector: {}
   affinity:
@@ -197,7 +198,7 @@ distributor:
   # -- Pod Annotations
   podAnnotations:
     prometheus.io/scrape: 'true'
-    prometheus.io/port: '8080'
+    prometheus.io/port: '{{ .Values.config.server.httpListenPort }}'
 
   nodeSelector: {}
   affinity:
@@ -300,7 +301,7 @@ ingester:
   # -- Pod Annotations
   podAnnotations:
     prometheus.io/scrape: 'true'
-    prometheus.io/port: '8080'
+    prometheus.io/port: '{{ .Values.config.server.httpListenPort }}'
 
   nodeSelector: {}
   affinity:
@@ -452,7 +453,7 @@ ruler:
   # -- Pod Annotations
   podAnnotations:
     prometheus.io/scrape: 'true'
-    prometheus.io/port: '8080'
+    prometheus.io/port: '{{ .Values.config.server.httpListenPort }}'
 
   nodeSelector: {}
   affinity: {}
@@ -529,7 +530,7 @@ querier:
   # -- Pod Annotations
   podAnnotations:
     prometheus.io/scrape: 'true'
-    prometheus.io/port: '8080'
+    prometheus.io/port: '{{ .Values.config.server.httpListenPort }}'
 
   nodeSelector: {}
   affinity:
@@ -629,7 +630,7 @@ query_frontend:
   # -- Pod Annotations
   podAnnotations:
     prometheus.io/scrape: 'true'
-    prometheus.io/port: '8080'
+    prometheus.io/port: '{{ .Values.config.server.httpListenPort }}'
 
   autoscaling:
     # -- Creates a HorizontalPodAutoscaler for the distributor pods.
@@ -728,7 +729,7 @@ query_scheduler:
   # -- Pod Annotations
   podAnnotations:
     prometheus.io/scrape: 'true'
-    prometheus.io/port: '8080'
+    prometheus.io/port: '{{ .Values.config.server.httpListenPort }}'
 
   nodeSelector: {}
   affinity:
@@ -817,7 +818,7 @@ index_gateway:
   # -- Pod Annotations
   podAnnotations:
     prometheus.io/scrape: 'true'
-    prometheus.io/port: '8080'
+    prometheus.io/port: '{{ .Values.config.server.httpListenPort }}'
 
   nodeSelector: {}
   affinity:
@@ -927,11 +928,10 @@ index_gateway:
   lifecycle: {}
 
 memcached-frontend:
-  enabled: false
-  architecture: "high-availability"
-  replicaCount: 2
+  enabled: true
+  replicas: 2
   resources: {}
-  extraEnv:
+  env:
     # -- MEMCACHED_CACHE_SIZE is the amount of memory allocated to memcached for object storage
     - name: MEMCACHED_CACHE_SIZE
       value: "1024"
@@ -945,15 +945,14 @@ memcached-frontend:
       value: "4"
   metrics:
     enabled: true
-    serviceMonitor:
-      enabled: false
+  serviceMonitor:
+    enabled: false
 
 memcached-chunks:
-  enabled: false
-  architecture: "high-availability"
-  replicaCount: 2
+  enabled: true
+  replicas: 2
   resources: {}
-  extraEnv:
+  env:
     # -- MEMCACHED_CACHE_SIZE is the amount of memory allocated to memcached for object storage
     - name: MEMCACHED_CACHE_SIZE
       value: "1024"
@@ -967,15 +966,14 @@ memcached-chunks:
       value: "4"
   metrics:
     enabled: true
-    serviceMonitor:
-      enabled: false
+  serviceMonitor:
+    enabled: false
 
 memcached-index-queries:
-  enabled: false
-  architecture: "high-availability"
-  replicaCount: 2
+  enabled: true
+  replicas: 2
   resources: {}
-  extraEnv:
+  env:
     # -- MEMCACHED_CACHE_SIZE is the amount of memory allocated to memcached for object storage
     - name: MEMCACHED_CACHE_SIZE
       value: "1024"
@@ -989,16 +987,14 @@ memcached-index-queries:
       value: "4"
   metrics:
     enabled: true
-    serviceMonitor:
-      enabled: false
+  serviceMonitor:
+    enabled: false
 
 memcached-index-writes:
-  enabled: false
-  # enabled/disabled via the tags.blocks-storage-memcached boolean
-  architecture: "high-availability"
-  replicaCount: 2
+  enabled: true
+  replicas: 2
   resources: {}
-  extraEnv:
+  env:
     # -- MEMCACHED_CACHE_SIZE is the amount of memory allocated to memcached for object storage
     - name: MEMCACHED_CACHE_SIZE
       value: "1024"
@@ -1012,8 +1008,8 @@ memcached-index-writes:
       value: "4"
   metrics:
     enabled: true
-    serviceMonitor:
-      enabled: false
+  serviceMonitor:
+    enabled: false
 
 minio:
   enabled: true

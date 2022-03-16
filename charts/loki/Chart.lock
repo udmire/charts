@@ -1,18 +1,18 @@
 dependencies:
 - name: memcached
-  repository: https://charts.bitnami.com/bitnami
-  version: 5.15.14
+  repository: https://charts.udmire.cn/
+  version: 0.1.0
 - name: memcached
-  repository: https://charts.bitnami.com/bitnami
-  version: 5.15.14
+  repository: https://charts.udmire.cn/
+  version: 0.1.0
 - name: memcached
-  repository: https://charts.bitnami.com/bitnami
-  version: 5.15.14
+  repository: https://charts.udmire.cn/
+  version: 0.1.0
 - name: memcached
-  repository: https://charts.bitnami.com/bitnami
-  version: 5.15.14
+  repository: https://charts.udmire.cn/
+  version: 0.1.0
 - name: minio
   repository: https://helm.min.io/
   version: 8.0.9
-digest: sha256:a5cae2fe620776c2d77f6f0745ab712482a4c0d34a5c6bb6ddb35f58bbd95fa7
-generated: "2022-03-04T14:06:56.519962+08:00"
+digest: sha256:74f1ea8c2f1d887fbf130b9f6aaf6b25107d8a7d10dce4b43ebe459010ce99b4
+generated: "2022-03-16T16:10:54.724713+08:00"

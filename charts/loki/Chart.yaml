@@ -26,21 +26,24 @@ appVersion: "1.16.0"
 dependencies:
   - name: memcached
     alias: memcached-frontend
-    version: 5.15.14
-    repository: https://charts.bitnami.com/bitnami
+    version: 0.1.0
+    repository: https://charts.udmire.cn/
     condition: memcached-frontend.enabled
   - name: memcached
     alias: memcached-chunks
-    version: 5.15.14
-    repository: https://charts.bitnami.com/bitnami
+    version: 0.1.0
+    repository: https://charts.udmire.cn/
+    condition: memcached-chunks.enabled
   - name: memcached
     alias: memcached-index-queries
-    version: 5.15.14
-    repository: https://charts.bitnami.com/bitnami
+    version: 0.1.0
+    repository: https://charts.udmire.cn/
+    condition: memcached-index-queries.enabled
   - name: memcached
     alias: memcached-index-writes
-    version: 5.15.14
-    repository: https://charts.bitnami.com/bitnami
+    version: 0.1.0
+    repository: https://charts.udmire.cn/
+    condition: memcached-index-writes.enabled
   - name: minio
     alias: minio
     version: 8.0.9
