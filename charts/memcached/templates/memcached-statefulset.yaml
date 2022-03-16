@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "memcached.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "memcached.labels" . | nindent 4 }}
+  annotations:
+    {{- include "contentRender" ( dict "value" .Values.annotations "context" . ) | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicas }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "memcached.selectorLabels" . | nindent 6 }}
+  updateStrategy:
+    {{- toYaml .Values.statefulStrategy | nindent 4 }}          
+  podManagementPolicy: "{{ .Values.statefulSet.podManagementPolicy }}"
+  serviceName: {{ template "memcached.fullname" . }}
+  template:
+    metadata:
+      labels:
+        {{- include "memcached.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        {{- if .Values.podAnnotations }}
+        {{- include "contentRender" ( dict "value" .Values.podAnnotations "context" . ) | nindent 8 }}
+        {{- end }}
+        {{- if and .Values.metrics.enabled .Values.metrics.podAnnotations }}
+        {{- include "contentRender" ( dict "value" .Values.metrics.podAnnotations "context" . ) | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName }}
+      {{- end }}
+      {{- if .Values.securityContext.enabled }}
+      securityContext: {{- omit .Values.securityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- toYaml .Values.initContainers | nindent 8 }}
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.tolerations | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      volumes:
+        {{- if .Values.extraVolumes }}
+        {{- toYaml .Values.extraVolumes | nindent 8 }}
+        {{- end }}
+      containers:
+        {{- if .Values.extraContainers }}
+        {{- toYaml .Values.extraContainers | nindent 8 }}
+        {{- end }}
+        - name: memcached
+          {{- include "image" .Values.image.memcached | nindent 10 }}
+          args:
+            {{- range $key, $value := .Values.extraArgs }}
+            - "-{{ $key }}={{ $value }}"
+            {{- end }}
+          volumeMounts:
+            {{- if .Values.extraVolumeMounts }}
+            {{- toYaml .Values.extraVolumeMounts | nindent 12}}
+            {{- end }}
+          ports:
+            - name: server
+              containerPort: {{ .Values.config.server.port }}
+              protocol: TCP
+          {{- if .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml .Values.startupProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          {{- end }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.env }}
+          env:
+            {{- toYaml .Values.env | nindent 12 }}
+          {{- end }}
+        {{- if .Values.metrics.enabled }}
+        - name: metrics
+          {{- include "image" .Values.image.exporter | nindent 10 }}
+          ports:
+            - name: http-metrics
+              containerPort: {{ .Values.config.server.metricPort }}
+          {{- if .Values.metrics.startupProbe }}
+          startupProbe:
+            {{- toYaml .Values.metrics.startupProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.metrics.livenessProbe }}
+          livenessProbe:
+            {{- toYaml .Values.metrics.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.metrics.readinessProbe }}
+          readinessProbe:
+            {{- toYaml .Values.metrics.readinessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.metrics.resources }}
+          resources: {{- toYaml .Values.metrics.resources | nindent 12 }}
+          {{- end }}
+        {{- end }}

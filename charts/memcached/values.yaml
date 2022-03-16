@@ -1,0 +1,129 @@
+# Default values for memcached.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  memcached:
+    registry: ""
+    repository: bitnami/memcached
+    tag: 1.6.14-debian-10-r16
+    pullPolicy: IfNotPresent
+  exporter:
+    registry: ""
+    repository: bitnami/memcached-exporter
+    tag: 0.9.0-debian-10-r312
+    pullPolicy: IfNotPresent
+  
+
+config:
+  server:
+    port: 11211
+    metricPort: 9150
+
+replicas: 3
+
+statefulSet:
+  podManagementPolicy: OrderedReady
+
+service:
+  annotations: {}
+  labels: {}
+
+serviceAccount:
+  name:
+
+serviceMonitor:
+  enabled: false
+  additionalLabels: {}
+  relabelings: []
+  metricRelabelings: []
+  # -- Additional endpoint configuration https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
+  extraEndpointSpec: {}
+
+resources: {}
+
+# -- Additional Cortex container arguments, e.g. log.level (debug, info, warn, error)
+extraArgs: {}
+
+# -- Pod Labels
+podLabels: {}
+
+# -- Pod Annotations
+podAnnotations: {}
+
+nodeSelector: {}
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values:
+                  - memcached
+          topologyKey: 'kubernetes.io/hostname'
+
+annotations: {}
+
+autoscaling:
+  enabled: false
+  minReplicas: 3
+  maxReplicas: 30
+  targetMemoryUtilizationPercentage: 80
+  behavior:
+    scaleDown:
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 1800
+      stabilizationWindowSeconds: 3600
+    scaleUp:
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 1800
+
+startupProbe: {}
+livenessProbe: {}
+readinessProbe: {}
+
+securityContext: {}
+
+containerSecurityContext:
+  enabled: true
+  readOnlyRootFilesystem: true
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 0
+    maxUnavailable: 1
+statefulStrategy:
+  type: RollingUpdate
+
+terminationGracePeriodSeconds: 10
+
+tolerations: []
+
+podDisruptionBudget:
+  maxUnavailable: 1
+
+initContainers: []
+extraContainers: []
+extraVolumes: []
+extraVolumeMounts: []
+env: []
+
+metrics:
+  enabled: true
+
+  podAnnotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '{{ .Values.config.server.metricPort }}'
+
+  startupProbe: {}
+  livenessProbe: {}
+  readinessProbe: {}
+  resources: {}

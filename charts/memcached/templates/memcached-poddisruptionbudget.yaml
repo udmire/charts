@@ -1,0 +1,14 @@
+{{- if and (gt (int .Values.replicas) 1) (.Values.podDisruptionBudget) }}
+apiVersion: {{ include "memcached.pdbVersion" . }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "memcached.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "memcached.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "memcached.selectorLabels" . | nindent 6 }}
+  {{- toYaml .Values.podDisruptionBudget | nindent 2 }}
+{{- end }}
