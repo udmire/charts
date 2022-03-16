@@ -13,9 +13,9 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-    - port: {{ .Values.config.server.port }}
+    - port: {{ .Values.config.server.memcache }}
       protocol: TCP
-      name: server
-      targetPort: server
+      name: memcache
+      targetPort: memcache
   selector:
     {{- include "memcached.selectorLabels" . | nindent 4 }}

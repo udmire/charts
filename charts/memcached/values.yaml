@@ -17,7 +17,7 @@ image:
 
 config:
   server:
-    port: 11211
+    memcache: 11211
     metricPort: 9150
 
 replicas: 3
@@ -85,14 +85,20 @@ autoscaling:
           value: 1
           periodSeconds: 1800
 
-startupProbe: {}
-livenessProbe: {}
-readinessProbe: {}
+startupProbe: 
+  tcpSocket:
+    port: memcache
+livenessProbe:
+  tcpSocket:
+    port: memcache
+readinessProbe: 
+  tcpSocket:
+    port: memcache
 
 securityContext: {}
 
 containerSecurityContext:
-  enabled: true
+  enabled: false
   readOnlyRootFilesystem: true
 
 strategy:
@@ -114,7 +120,9 @@ initContainers: []
 extraContainers: []
 extraVolumes: []
 extraVolumeMounts: []
-env: []
+env: 
+- name: MEMCACHED_MAX_ITEM_SIZE
+  value: "32m"
 
 metrics:
   enabled: true
