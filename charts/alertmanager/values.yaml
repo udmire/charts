@@ -9,9 +9,11 @@ global:
       pullPolicy: IfNotPresent
       # Overrides the Cortex version.
       tag: "v1.11.0"
-
-# -- Kubernetes cluster DNS domain
-clusterDomain: cluster.local
+  # -- Kubernetes cluster DNS domain
+  clusterDomain: cluster.local
+  storage:
+    buckets:
+      alertData: &alertBucket "alert"
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -153,7 +155,7 @@ minio:
   accessKey: alertmanager
   secretKey: supersecret
   buckets:
-    - name: alertmanager
+    - name: *alertBucket
       policy: none
       purge: false
   persistence:

@@ -67,14 +67,14 @@ Create configuration parameters for memcached configuration
 {{- define "loki.memcached" -}}
 {{- if index .Values "memcached-index-queries" "enabled" }}
 - "-store.index-cache-read.memcached.expiration=5m"
-- "-store.index-cache-read.memcached.addresses=dns+{{ .Release.Name }}-memcached-index-queries.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:11211"
+- "-store.index-cache-read.memcached.addresses=dns+{{ .Release.Name }}-memcached-index-queries.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:11211"
 {{- end -}}
 {{- if index .Values "memcached-chunks" "enabled" }}
 - "-store.chunks-cache.cache-stubs=true"
-- "-store.chunks-cache.memcached.addresses=dns+{{ .Release.Name }}-memcached-chunks.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:11211"
+- "-store.chunks-cache.memcached.addresses=dns+{{ .Release.Name }}-memcached-chunks.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:11211"
 {{- end -}}
 {{- if index .Values "memcached-index-writes" "enabled" }}
-- "-store.index-cache-write.memcached.addresses=dns+{{ .Release.Name }}-memcached-index-writes.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:11211"
+- "-store.index-cache-write.memcached.addresses=dns+{{ .Release.Name }}-memcached-index-writes.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:11211"
 {{- end -}}
 {{- end -}}
 
@@ -83,7 +83,7 @@ Create configuration for frontend memcached configuration
 */}}
 {{- define "loki.frontend-memcached" -}}
 {{- if index .Values "memcached-frontend" "enabled" }}
-- "-frontend.memcached.addresses=dns+{{ template "loki.fullname" . }}-memcached-frontend.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:11211"
+- "-frontend.memcached.addresses=dns+{{ template "loki.fullname" . }}-memcached-frontend.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:11211"
 {{- end -}}
 {{- end -}}
 

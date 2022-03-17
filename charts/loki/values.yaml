@@ -8,10 +8,13 @@ global:
       repository: grafana/loki
       tag: "2.4.2"
       pullPolicy: IfNotPresent
-
-# -- Kubernetes cluster DNS domain
-clusterDomain: cluster.local
-revisionHistoryLimit: 10
+  # -- Kubernetes cluster DNS domain
+  clusterDomain: cluster.local
+  revisionHistoryLimit: 10
+  storage:
+    buckets:
+      logData: &logDataBucket "log-data"
+      logRule: &logRuleBucket "log-rule"
 
 
 serviceAccount:
@@ -1017,10 +1020,10 @@ minio:
   accessKey: logs
   secretKey: supersecret
   buckets:
-    - name: logs-data
+    - name: *logDataBucket
       policy: none
       purge: false
-    - name: logs-rule
+    - name: *logRuleBucket
       policy: none
       purge: false
   persistence:

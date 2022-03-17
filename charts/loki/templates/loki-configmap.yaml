@@ -36,8 +36,8 @@ data:
       compress_responses: true
       max_body_size: 104857600
       query_stats_enabled: true
-      scheduler_address: {{ template "loki.fullname" . }}-query-scheduler-headless.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:{{ .Values.config.server.grpcListenPort }}
-      tail_proxy_url: 'http://{{ template "loki.fullname" . }}-querier.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:{{ .Values.config.server.httpListenPort }}'
+      scheduler_address: {{ template "loki.fullname" . }}-query-scheduler-headless.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.server.grpcListenPort }}
+      tail_proxy_url: 'http://{{ template "loki.fullname" . }}-querier.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.server.httpListenPort }}'
       grpc_client_config:
         grpc_compression: snappy
     query_scheduler:
@@ -91,40 +91,45 @@ data:
       {{- if index .Values "memcached-chunks" "enabled" }}
       chunk_cache_config:
         memcached_client:
-          addresses: dns+{{ template "loki.fullname" . }}-memcached-chunks.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:11211
+          addresses: dns+{{ template "loki.fullname" . }}-memcached-chunks.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:11211
       {{- end }}
       {{- if index .Values "memcached-index-writes" "enabled" }}
       write_dedupe_cache_config:
         memcached_client:
-          addresses: dns+{{ template "loki.fullname" . }}-memcached-index-writes.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:11211
+          addresses: dns+{{ template "loki.fullname" . }}-memcached-index-writes.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:11211
       {{- end }}
       cache_lookups_older_than: 2h
     storage_config:
       boltdb_shipper:
         index_gateway_client:
-          server_address: dns:///{{ template "loki.fullname" . }}-index-gateway.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:{{ .Values.config.server.grpcListenPort }}
+          server_address: dns:///{{ template "loki.fullname" . }}-index-gateway.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.server.grpcListenPort }}
           grpc_client_config:
             grpc_compression: snappy
         active_index_directory: /data/index
         cache_location: /data/cache
-      {{- if .Values.config.storage }}
-        shared_store: {{.Values.config.storage.backend}}
-      {{- if eq .Values.config.storage.backend "gcs"}}
+      {{- if .Values.global.storage.backend }}
+        shared_store: {{.Values.global.storage.backend}}
+      {{- if eq .Values.global.storage.backend "gcs"}}
       gcs:
-        {{- toYaml .Values.config.storage.gcs | nindent 4}}
+        {{- toYaml .Values.global.storage.gcs | nindent 4}}
       {{- end }}
-      {{- if eq .Values.config.storage.backend "s3"}}
+      {{- if eq .Values.global.storage.backend "s3"}}
       aws:
-        {{- toYaml .Values.config.storage.s3 | nindent 4}}
+        endpoint: {{ .Values.global.storage.s3.endpoint }}
+        bucketnames: {{ .Values.global.storage.buckets.logData }}
+        access_key_id: {{ .Values.global.storage.s3.accessKey }}
+        secret_access_key: {{ .Values.global.storage.s3.secretKey }}
+        insecure: {{ default true .Values.global.storage.s3.insecure }}
+        s3forcepathstyle: true
       {{- end }}
-      {{- if eq .Values.config.storage.backend "azure"}}
+      {{- if eq .Values.global.storage.backend "azure"}}
       azure:
-        {{- toYaml .Values.config.storage.azure | nindent 4}}
+        {{- toYaml .Values.global.storage.azure | nindent 4}}
       {{- end }}
       {{- else if .Values.minio.enabled }}
         shared_store: s3
       aws:
-        endpoint: {{ template "loki.fullname" . }}-minio.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:9000
+        endpoint: {{ template "loki.fullname" . }}-minio.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:9000
         {{- with (index .Values.minio.buckets 0) }}
         bucketnames: {{ .name }}
         {{- end }}
@@ -149,35 +154,41 @@ data:
         compression: snappy
         cache:
           memcached_client:
-            addresses: dns+{{ template "loki.fullname" . }}-memcached-frontend.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:11211
+            addresses: dns+{{ template "loki.fullname" . }}-memcached-frontend.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:11211
       {{- end }}
     ruler:
-      {{- toYaml .Values.config.ruler.alertmanager | nindent 6 }}
+      {{- if .Values.config.ruler.alertmanager }}
+      {{- include "contentRender" ( dict "value" .Values.config.ruler.alertmanager "context" . ) | nindent 6 }}
+      {{- end }}
       enable_sharding: true
-      enable_alertmanager_v2: true
       ring:
         kvstore:
           store: memberlist
           prefix: logs/ruler/
       storage:
-        {{- if .Values.config.storage }}
-        type: {{.Values.config.storage.backend}}
-        {{- if eq .Values.config.storage.backend "gcs"}}
+        {{- if .Values.global.storage.backend }}
+        type: {{.Values.global.storage.backend}}
+        {{- if eq .Values.global.storage.backend "gcs"}}
         gcs:
-          {{- toYaml .Values.config.storage.gcs | nindent 4}}
+          {{- toYaml .Values.global.storage.gcs | nindent 4}}
         {{- end }}
-        {{- if eq .Values.config.storage.backend "s3"}}
+        {{- if eq .Values.global.storage.backend "s3"}}
         s3:
-          {{- toYaml .Values.config.storage.s3 | nindent 4}}
+          endpoint: {{ .Values.global.storage.s3.endpoint }}
+          bucketnames: {{ .Values.global.storage.buckets.logData }}
+          access_key_id: {{ .Values.global.storage.s3.accessKey }}
+          secret_access_key: {{ .Values.global.storage.s3.secretKey }}
+          insecure: {{ default true .Values.global.storage.s3.insecure }}
+          s3forcepathstyle: true
         {{- end }}
-        {{- if eq .Values.config.storage.backend "azure"}}
+        {{- if eq .Values.global.storage.backend "azure"}}
         azure:
-          {{- toYaml .Values.config.storage.azure | nindent 4}}
+          {{- toYaml .Values.global.storage.azure | nindent 4}}
         {{- end }}
         {{- else if .Values.minio.enabled }}
         type: s3
         s3:
-          endpoint: {{ template "loki.fullname" . }}-minio.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:9000
+          endpoint: {{ template "loki.fullname" . }}-minio.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:9000
           {{- with (index .Values.minio.buckets 1) }}
           bucketnames: {{ .name }}
           {{- end }}
@@ -194,7 +205,7 @@ data:
       abort_if_cluster_join_fails: false
       bind_port: {{ .Values.config.memberlist.bindPort }}
       join_members:
-        - {{ include "loki.fullname" . }}-memberlist.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:{{ .Values.config.memberlist.bindPort }}
+        - {{ include "loki.fullname" . }}-memberlist.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.memberlist.bindPort }}
       max_join_backoff: 1m
       max_join_retries: 10
       min_join_backoff: 1s

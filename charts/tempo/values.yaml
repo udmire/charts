@@ -10,9 +10,11 @@ global:
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
       tag: "latest"
-
-# -- Kubernetes cluster DNS domain
-clusterDomain: cluster.local
+  storage:
+    buckets:
+      traceData: &traceDataBucket "trace-data"
+  # -- Kubernetes cluster DNS domain
+  clusterDomain: cluster.local
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -44,11 +46,6 @@ config:
       grpc: true
     opencensus: true
     kafka: false
-  # storage:
-  #   backend: "" # can be local, s3, azure, gcs etc.
-  #   s3: {}
-  #   gcs: {}
-  #   azure: {}
 
 runtime_config: {}
 
@@ -683,7 +680,7 @@ minio:
   accessKey: traces
   secretKey: supersecret
   buckets:
-    - name: trace-data
+    - name: *traceDataBucket
       policy: none
       purge: false
   persistence:

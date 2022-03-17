@@ -21,7 +21,7 @@ data:
       # -- the service name of the memberlist
       # if using memberlist discovery
       join_members:
-        - {{ include "alertmanager.fullname" . }}-memberlist.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:{{ .Values.config.memberlist.bindPort }}
+        - {{ include "alertmanager.fullname" . }}-memberlist.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.memberlist.bindPort }}
       max_join_backoff: 1m
       max_join_retries: 10
       min_join_backoff: 1s
@@ -36,28 +36,34 @@ data:
           store: memberlist
           prefix: alertmanager/
     alertmanager_storage:
-      {{- if .Values.config.storage.backend }}
-      backend: {{.Values.config.storage.backend}}
-      {{- if eq .Values.config.storage.backend "gcs"}}
+      {{- if .Values.global.storage.backend }}
+      backend: {{.Values.global.storage.backend}}
+      {{- if eq .Values.global.storage.backend "gcs"}}
       gcs:
-        {{- toYaml .Values.config.storage.gcs | nindent 4}}
+        {{- toYaml .Values.global.storage.gcs | nindent 4}}
       {{- end }}
-      {{- if eq .Values.config.storage.backend "s3"}}
+      {{- if eq .Values.global.storage.backend "s3"}}
       s3:
-        {{- toYaml .Values.config.storage.s3 | nindent 4}}
+        endpoint: {{ .Values.global.storage.s3.endpoint }}
+        bucket_name: {{ .Values.global.storage.buckets.alertData }}
+        access_key_id: {{ .Values.global.storage.s3.accessKey }}
+        secret_access_key: {{ .Values.global.storage.s3.secretKey }}
+        insecure: {{ default true .Values.global.storage.s3.insecure }}
+        http:
+          insecure_skip_verify: true
       {{- end }}
-      {{- if eq .Values.config.storage.backend "azure"}}
+      {{- if eq .Values.global.storage.backend "azure"}}
       azure:
-        {{- toYaml .Values.config.storage.azure | nindent 4}}
+        {{- toYaml .Values.global.storage.azure | nindent 4}}
       {{- end }}
-      {{- if eq .Values.config.storage.backend "swift"}}
+      {{- if eq .Values.global.storage.backend "swift"}}
       swift:
-        {{- toYaml .Values.config.storage.swift | nindent 4}}
+        {{- toYaml .Values.global.storage.swift | nindent 4}}
       {{- end }}
       {{- else if .Values.minio.enabled }}
       backend: s3
       s3:
-        endpoint: {{ .Release.Name }}-minio.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:9000
+        endpoint: {{ .Release.Name }}-minio.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:9000
         {{- with (index .Values.minio.buckets 0) }}
         bucket_name: {{ .name }}
         {{- end }}

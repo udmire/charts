@@ -47,7 +47,6 @@ spec:
           args:
             - "-target=querier"
             - "-config.file=/etc/tempo/tempo.yaml"
-            - "-querier.frontend-address={{ template "tempo.fullname" . }}-query-frontend-headless.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:{{ .Values.config.server.grpcListenPort }}"
           {{- range $key, $value := .Values.querier.extraArgs }}
             - "-{{ $key }}={{ $value }}"
           {{- end }}

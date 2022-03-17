@@ -19,5 +19,5 @@ data:
     [live]
     max_connections = 100
     ha_engine = "redis"
-    ha_engine_address = "{{ .Release.Name }}-redis.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:6379"
+    ha_engine_address = "{{ .Release.Name }}-redis.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:6379"
     {{- end }}

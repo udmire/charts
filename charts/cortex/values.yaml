@@ -8,9 +8,12 @@ global:
       repository: cortexproject/cortex
       tag: "v1.11.0"
       pullPolicy: IfNotPresent
-
-# -- Kubernetes cluster DNS domain
-clusterDomain: cluster.local
+  # -- Kubernetes cluster DNS domain
+  clusterDomain: cluster.local
+  storage:
+    buckets:
+      metricData: &metricDataBucket "metric-data"
+      metricRule: &metricRuleBucket "metric-rule"
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -33,8 +36,6 @@ config:
       # url: http://_http-metrics._tcp.{{ .Release.Name }}-alertmanager.{{ .Release.Namespace }}-common/alertmanager/
       external_url: https://alertmanager.xx
       enable_alertmanager_discovery: false
-  storage: {}
-  rulerStorage: {}
 
 ingress:
   enabled: false
@@ -1006,13 +1007,10 @@ minio:
   accessKey: metrics
   secretKey: supersecret
   buckets:
-    - name: metrics-data
+    - name: *metricDataBucket
       policy: none
       purge: false
-    - name: metrics-rule
-      policy: none
-      purge: false
-    - name: alertmanager
+    - name: *metricRuleBucket
       policy: none
       purge: false
   persistence:
