@@ -36,7 +36,7 @@ data:
       compress_responses: true
       max_body_size: 104857600
       query_stats_enabled: true
-      scheduler_address: {{ .Release.Name }}-query-scheduler-headless.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:{{ .Values.config.server.grpcListenPort }}
+      scheduler_address: {{ template "loki.fullname" . }}-query-scheduler-headless.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:{{ .Values.config.server.grpcListenPort }}
       tail_proxy_url: 'http://{{ template "loki.fullname" . }}-querier.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:{{ .Values.config.server.httpListenPort }}'
       grpc_client_config:
         grpc_compression: snappy
@@ -91,12 +91,12 @@ data:
       {{- if index .Values "memcached-chunks" "enabled" }}
       chunk_cache_config:
         memcached_client:
-          addresses: dns+{{ .Release.Name }}-memcached-chunks.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:11211
+          addresses: dns+{{ template "loki.fullname" . }}-memcached-chunks.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:11211
       {{- end }}
       {{- if index .Values "memcached-index-writes" "enabled" }}
       write_dedupe_cache_config:
         memcached_client:
-          addresses: dns+{{ .Release.Name }}-memcached-index-writes.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:11211
+          addresses: dns+{{ template "loki.fullname" . }}-memcached-index-writes.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:11211
       {{- end }}
       cache_lookups_older_than: 2h
     storage_config:
@@ -124,7 +124,7 @@ data:
       {{- else if .Values.minio.enabled }}
         shared_store: s3
       aws:
-        endpoint: {{ .Release.Name }}-minio.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:9000
+        endpoint: {{ template "loki.fullname" . }}-minio.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:9000
         {{- with (index .Values.minio.buckets 0) }}
         bucketnames: {{ .name }}
         {{- end }}
@@ -149,7 +149,7 @@ data:
         compression: snappy
         cache:
           memcached_client:
-            addresses: dns+{{ .Release.Name }}-memcached-frontend.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:11211
+            addresses: dns+{{ template "loki.fullname" . }}-memcached-frontend.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:11211
       {{- end }}
     ruler:
       {{- toYaml .Values.config.ruler.alertmanager | nindent 6 }}
@@ -177,7 +177,7 @@ data:
         {{- else if .Values.minio.enabled }}
         type: s3
         s3:
-          endpoint: {{ .Release.Name }}-minio.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:9000
+          endpoint: {{ template "loki.fullname" . }}-minio.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:9000
           {{- with (index .Values.minio.buckets 1) }}
           bucketnames: {{ .name }}
           {{- end }}

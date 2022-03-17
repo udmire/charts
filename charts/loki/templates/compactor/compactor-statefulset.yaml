@@ -62,12 +62,6 @@ spec:
       {{- end }}
       initContainers:
         {{- toYaml .Values.compactor.initContainers | nindent 8 }}
-      {{- if .Values.image.pullSecrets }}
-      imagePullSecrets:
-      {{- range .Values.image.pullSecrets }}
-        - name: {{ . }}
-      {{- end }}
-      {{- end }}
       nodeSelector:
         {{- toYaml .Values.compactor.nodeSelector | nindent 8 }}
       affinity:
@@ -88,7 +82,7 @@ spec:
         {{ toYaml .Values.compactor.extraContainers | nindent 8 }}
         {{- end }}
         - name: compactor
-          {{- include "image" .Values.image.loki | nindent 10 }}
+          {{- include "image" .Values.global.image.loki | nindent 10 }}
           args:
             - -config.file=/etc/loki/loki.yaml
             - -target=compactor

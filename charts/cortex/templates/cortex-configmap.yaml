@@ -33,14 +33,14 @@ data:
           store: memberlist
           prefix: metrics/distributor/
     frontend_worker:
-      scheduler_address: {{ .Release.Name }}-query-scheduler-headless.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:{{ .Values.config.server.grpcListenPort }}
+      scheduler_address: {{ template "cortex.fullname" . }}-query-scheduler-headless.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:{{ .Values.config.server.grpcListenPort }}
       match_max_concurrent: true
       grpc_client_config:
         max_send_msg_size: 104857600
         grpc_compression: snappy
     frontend:
       log_queries_longer_than: 10s
-      scheduler_address: {{ .Release.Name }}-query-scheduler-headless.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:{{ .Values.config.server.grpcListenPort }}
+      scheduler_address: {{ template "cortex.fullname" . }}-query-scheduler-headless.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:{{ .Values.config.server.grpcListenPort }}
     query_scheduler:
       max_outstanding_requests_per_tenant: 100
       grpc_client_config:
@@ -83,7 +83,7 @@ data:
         {{- if index .Values "memcached-blocks-index" "enabled" }}
           backend: memcached
           memcached:
-            addresses: dns+{{ .Release.Name }}-memcached-blocks-index.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:11211
+            addresses: dns+{{ template "cortex.fullname" . }}-memcached-blocks-index.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:11211
             max_item_size: 5242880
             max_async_buffer_size: 25000
             timeout: 200ms
@@ -99,7 +99,7 @@ data:
             max_item_size: 1048576
             max_async_buffer_size: 25000
             timeout: 200ms
-            addresses: dns+{{ .Release.Name }}-memcached-blocks-chunk.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:11211
+            addresses: dns+{{ template "cortex.fullname" . }}-memcached-blocks-chunk.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:11211
         {{- end }}
         {{- if index .Values "memcached-blocks-metadata" "enabled" }}
         metadata_cache:
@@ -109,7 +109,7 @@ data:
             max_item_size: 1048576
             max_async_buffer_size: 25000
             timeout: 200ms
-            addresses: dns+{{ .Release.Name }}-memcached-blocks-metadata.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:11211
+            addresses: dns+{{ template "cortex.fullname" . }}-memcached-blocks-metadata.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:11211
         {{- end }}
       # storage section
       {{- if .Values.config.storage.backend }}
@@ -133,7 +133,7 @@ data:
       {{- else if .Values.minio.enabled }}
       backend: s3
       s3:
-        endpoint: {{ .Release.Name }}-minio.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:9000
+        endpoint: {{ template "cortex.fullname" . }}-minio.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:9000
         {{- with (index .Values.minio.buckets 0) }}
         bucket_name: {{ .name }}
         {{- end }}
@@ -147,7 +147,6 @@ data:
       filesystem:
         dir: /data/tsdb
       {{- end }}
-    # -- https://cortexmetrics.io/docs/configuration/configuration-file/#store_gateway_config
     store_gateway:
       sharding_enabled: true
       sharding_ring:
@@ -186,7 +185,7 @@ data:
           memcached_client:
             max_item_size: 1048576
             timeout: 200ms
-            addresses: dns+{{ .Release.Name }}-memcached-frontend.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:11211
+            addresses: dns+{{ template "cortex.fullname" . }}-memcached-frontend.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:11211
       {{- end }}
     ruler:
       {{- toYaml .Values.config.ruler.alertmanager | nindent 6 }}
@@ -220,7 +219,7 @@ data:
       {{- else if .Values.minio.enabled }}
       backend: s3
       s3:
-        endpoint: {{ .Release.Name }}-minio.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:9000
+        endpoint: {{ template "cortex.fullname" . }}-minio.{{ .Release.Namespace }}.svc.{{ .Values.clusterDomain }}:9000
         {{- with (index .Values.minio.buckets 1) }}
         bucket_name: {{ .name }}
         {{- end }}

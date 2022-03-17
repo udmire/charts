@@ -1,11 +1,14 @@
 # Default values for grafana.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
-image:
-  repository: grafana/grafana
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "8.4.3"
+global:
+  image:
+    grafana:
+      registry: ""
+      repository: grafana/grafana
+      pullPolicy: IfNotPresent
+      # Overrides the image tag whose default is the chart appVersion.
+      tag: "8.4.3"
 # -- Kubernetes cluster DNS domain
 clusterDomain: cluster.local
 

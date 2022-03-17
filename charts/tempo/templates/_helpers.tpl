@@ -108,3 +108,31 @@ Get volume of config secret of configMap
     name: {{ template "tempo.fullname" . }}-config
 {{- end -}}
 
+{{/*
+Return the image name
+*/}}
+{{- define "image" -}}
+{{- $registryName := .registry -}}
+{{- $repositoryName := .repository -}}
+{{- $tag := .tag | toString -}}
+{{- $pullPolicy := .pullPolicy -}}
+{{- if $registryName }}
+image: '{{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}'
+imagePullPolicy: '{{- printf "%s" $pullPolicy -}}'
+{{- else -}}
+image: '{{- printf "%s:%s" $repositoryName $tag -}}'
+imagePullPolicy: '{{- printf "%s" $pullPolicy -}}'
+{{- end -}}
+{{- end -}}
+
+{{/*
+Renders a value that contains template.
+{{ include "contentRender" ( dict "value" .Values.path.to.the.Value "context" $) }}
+*/}}
+{{- define "contentRender" -}}
+    {{- if typeIs "string" .value }}
+        {{- tpl .value .context }}
+    {{- else }}
+        {{- tpl (.value | toYaml) .context }}
+    {{- end }}
+{{- end -}}

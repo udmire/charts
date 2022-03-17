@@ -26,9 +26,9 @@ spec:
         {{- end }}
       annotations:
         checksum/config: {{ include "tempo.configChecksum" . }}
-      {{- with .Values.query_frontend.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- if .Values.query_frontend.podAnnotations }}
+        {{- include "contentRender" ( dict "value" .Values.query_frontend.podAnnotations "context" . ) | nindent 8 }}
+        {{- end }}
     spec:
       serviceAccountName: {{ .Values.query_frontend.serviceAccount.name | default (include "tempo.serviceAccountName" . ) }}
       {{- if .Values.query_frontend.priorityClassName }}
@@ -39,16 +39,9 @@ spec:
       {{- end }}
       initContainers:
         {{- toYaml .Values.query_frontend.initContainers | nindent 8 }}
-      {{- if .Values.image.pullSecrets }}
-      imagePullSecrets:
-      {{- range .Values.image.pullSecrets }}
-        - name: {{ . }}
-      {{- end }}
-      {{- end }}
       containers:
         - name: query-frontend
-          image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- include "image" .Values.global.image.tempo | nindent 10 }}
           args:
             - "-target=query-frontend"
             - "-config.file=/etc/tempo/tempo.yaml"

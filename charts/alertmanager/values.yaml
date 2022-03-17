@@ -1,11 +1,14 @@
 # Default values for alertmanager.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
-image:
-  repository: cortexproject/cortex
-  pullPolicy: IfNotPresent
-  # Overrides the Cortex version.
-  tag: "v1.11.0"
+global:
+  image:
+    cortex:
+      registry: ""
+      repository: cortexproject/cortex
+      pullPolicy: IfNotPresent
+      # Overrides the Cortex version.
+      tag: "v1.11.0"
 
 # -- Kubernetes cluster DNS domain
 clusterDomain: cluster.local
@@ -18,6 +21,14 @@ serviceAccount:
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: ""
+
+config:
+  server: 
+    httpListenPort: 8080
+    grpcListenPort: 9095
+  memberlist:
+    bindPort: 7946
+  storage: {}
 
 
 alertmanager:
@@ -136,15 +147,6 @@ alertmanager:
 
   # -- Extra env variables to pass to the cortex container
   env: []
-
-
-config:
-  server: 
-    httpListenPort: 8080
-    grpcListenPort: 9095
-  memberlist:
-    bindPort: 7946
-  storage: {}
 
 minio:
   enabled: true

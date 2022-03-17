@@ -2,13 +2,15 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-replicaCount: 1
+global:
+  image:
+    tempo:
+      registry: ""
+      repository: grafana/tempo
+      pullPolicy: IfNotPresent
+      # Overrides the image tag whose default is the chart appVersion.
+      tag: "latest"
 
-image:
-  repository: grafana/tempo
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
 # -- Kubernetes cluster DNS domain
 clusterDomain: cluster.local
 
@@ -68,7 +70,7 @@ ingress:
 
 compactor:
   enabled: true
-  replicas: 3
+  replicas: 2
 
   service:
     annotations: {}
@@ -192,7 +194,6 @@ compactor:
   extraPorts: []
   env: []
   lifecycle: {}
-
 
 distributor:
   enabled: true
@@ -454,7 +455,7 @@ ingester:
 
 querier:
   enabled: true
-  replicas: 2
+  replicas: 4
 
   service:
     annotations: {}
@@ -658,10 +659,9 @@ query_frontend:
 
 memcached:
   enabled: true
-  architecture: "high-availability"
-  replicaCount: 2
+  replicas: 2
   resources: {}
-  extraEnv:
+  env:
     # -- MEMCACHED_CACHE_SIZE is the amount of memory allocated to memcached for object storage
     - name: MEMCACHED_CACHE_SIZE
       value: "1024"
@@ -675,8 +675,8 @@ memcached:
       value: "4"
   metrics:
     enabled: true
-    serviceMonitor:
-      enabled: false
+  serviceMonitor:
+    enabled: false
 
 minio:
   enabled: true

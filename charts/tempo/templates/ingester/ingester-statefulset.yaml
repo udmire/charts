@@ -52,8 +52,8 @@ spec:
         {{- end }}
       annotations:
         checksum/config: {{ include "tempo.configChecksum" . }}
-        {{- with .Values.ingester.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
+        {{- if .Values.ingester.podAnnotations }}
+        {{- include "contentRender" ( dict "value" .Values.ingester.podAnnotations "context" . ) | nindent 8 }}
         {{- end }}
     spec:
       serviceAccountName: {{ .Values.ingester.serviceAccount.name | default (include "tempo.serviceAccountName" . ) }}
@@ -65,12 +65,6 @@ spec:
       {{- end }}
       initContainers:
         {{- toYaml .Values.ingester.initContainers | nindent 8 }}
-      {{- if .Values.image.pullSecrets }}
-      imagePullSecrets:
-      {{- range .Values.image.pullSecrets }}
-        - name: {{ . }}
-      {{- end }}
-      {{- end }}
       nodeSelector:
         {{- toYaml .Values.ingester.nodeSelector | nindent 8 }}
       affinity:
@@ -95,8 +89,7 @@ spec:
         {{- toYaml .Values.ingester.extraContainers | nindent 8 }}
         {{- end }}
         - name: ingester
-          image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- include "image" .Values.global.image.tempo | nindent 10 }}
           args:
             - "-target=ingester"
             - "-config.file=/etc/tempo/tempo.yaml"

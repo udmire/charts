@@ -57,7 +57,7 @@ spec:
         {{- toYaml .Values.extraContainers | nindent 8 }}
         {{- end }}
         - name: memcached
-          {{- include "image" .Values.image.memcached | nindent 10 }}
+          {{- include "image" .Values.global.image.memcached | nindent 10 }}
           volumeMounts:
             {{- if .Values.extraVolumeMounts }}
             {{- toYaml .Values.extraVolumeMounts | nindent 12}}
@@ -89,7 +89,7 @@ spec:
           {{- end }}
         {{- if .Values.metrics.enabled }}
         - name: metrics
-          {{- include "image" .Values.image.exporter | nindent 10 }}
+          {{- include "image" .Values.global.image.exporter | nindent 10 }}
           ports:
             - name: http-metrics
               containerPort: {{ .Values.config.server.metricPort }}

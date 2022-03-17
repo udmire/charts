@@ -65,12 +65,6 @@ spec:
       {{- end }}
       initContainers:
         {{- toYaml .Values.ingester.initContainers | nindent 8 }}
-      {{- if .Values.image.pullSecrets }}
-      imagePullSecrets:
-      {{- range .Values.image.pullSecrets }}
-        - name: {{ . }}
-      {{- end }}
-      {{- end }}
       nodeSelector:
         {{- toYaml .Values.ingester.nodeSelector | nindent 8 }}
       affinity:
@@ -92,7 +86,7 @@ spec:
         {{- toYaml .Values.ingester.extraContainers | nindent 8 }}
         {{- end }}
         - name: ingester
-          {{- include "image" .Values.image.loki | nindent 10 }}
+          {{- include "image" .Values.global.image.loki | nindent 10 }}
           args:
             - -config.file=/etc/loki/loki.yaml
             - -target=ingester

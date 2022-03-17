@@ -25,8 +25,9 @@ appVersion: "1.16.0"
 dependencies:
   - name: memcached
     alias: memcached
-    version: 5.15.14
-    repository: https://charts.bitnami.com/bitnami
+    version: 0.1.0
+    repository: http://localhost:8080/
+    condition: memcached.enabled
   - name: minio
     alias: minio
     version: 8.0.9

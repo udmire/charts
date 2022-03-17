@@ -8,23 +8,23 @@ kubeVersion: ^1.19.0-0
 dependencies:
   - name: memcached
     alias: memcached-frontend
-    version: 5.15.14
-    repository: https://charts.bitnami.com/bitnami
+    version: 0.1.0
+    repository: http://localhost:8080/
     condition: memcached-frontend.enabled
   - name: memcached
     alias: memcached-blocks-index
-    version: 5.15.14
-    repository: https://charts.bitnami.com/bitnami
+    version: 0.1.0
+    repository: http://localhost:8080/
     condition: memcached-blocks-index.enabled
   - name: memcached
     alias: memcached-blocks-chunk
-    version: 5.15.14
-    repository: https://charts.bitnami.com/bitnami
+    version: 0.1.0
+    repository: http://localhost:8080/
     condition: memcached-blocks-chunk.enabled
   - name: memcached
     alias: memcached-blocks-metadata
-    version: 5.15.14
-    repository: https://charts.bitnami.com/bitnami
+    version: 0.1.0
+    repository: http://localhost:8080/
     condition: memcached-blocks-metadata.enabled
   - name: minio
     alias: minio

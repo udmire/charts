@@ -26,9 +26,9 @@ spec:
         {{- end }}
       annotations:
         checksum/config: {{ include "cortex.configChecksum" . }}
-      {{- with .Values.ruler.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- if .Values.ruler.podAnnotations }}
+        {{- include "contentRender" ( dict "value" .Values.ruler.podAnnotations "context" . ) | nindent 8 }}
+        {{- end }}
     spec:
       serviceAccountName: {{ .Values.ruler.serviceAccount.name | default (include "cortex.serviceAccountName" . ) }}
     {{- if .Values.ruler.priorityClassName }}
@@ -39,16 +39,9 @@ spec:
       {{- end }}
       initContainers:
         {{- toYaml .Values.ruler.initContainers | nindent 8 }}
-      {{- if .Values.image.pullSecrets }}
-      imagePullSecrets:
-      {{- range .Values.image.pullSecrets }}
-        - name: {{ . }}
-      {{- end }}
-      {{- end }}
       containers:
         - name: ruler
-          image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- include "image" .Values.global.image.cortex | nindent 10 }}
           args:
             - "-target=ruler"
             - "-config.file=/etc/cortex/cortex.yaml"

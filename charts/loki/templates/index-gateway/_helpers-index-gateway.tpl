@@ -22,14 +22,6 @@ app.kubernetes.io/component: index-gateway
 {{- end }}
 
 {{/*
-index-gateway image
-*/}}
-{{- define "loki.indexGatewayImage" -}}
-{{- $dict := dict "loki" .Values.loki.image "service" .Values.indexGateway.image "global" .Values.global.image "defaultVersion" .Chart.AppVersion -}}
-{{- include "loki.lokiImage" $dict -}}
-{{- end }}
-
-{{/*
 index-gateway priority class name
 */}}
 {{- define "loki.indexGatewayPriorityClassName" -}}

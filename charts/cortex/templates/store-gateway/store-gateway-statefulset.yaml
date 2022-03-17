@@ -49,8 +49,8 @@ spec:
         {{- end }}
       annotations:
         checksum/config: {{ include "cortex.configChecksum" . }}
-        {{- with .Values.store_gateway.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
+        {{- if .Values.store_gateway.podAnnotations }}
+        {{- include "contentRender" ( dict "value" .Values.store_gateway.podAnnotations "context" . ) | nindent 8 }}
         {{- end }}
     spec:
       serviceAccountName: {{ .Values.store_gateway.serviceAccount.name | default (include "cortex.serviceAccountName" . ) }}
@@ -62,12 +62,6 @@ spec:
       {{- end }}
       initContainers:
         {{- toYaml .Values.store_gateway.initContainers | nindent 8 }}
-      {{- if .Values.image.pullSecrets }}
-      imagePullSecrets:
-      {{- range .Values.image.pullSecrets }}
-        - name: {{ . }}
-      {{- end }}
-      {{- end }}
       nodeSelector:
         {{- toYaml .Values.store_gateway.nodeSelector | nindent 8 }}
       affinity:
@@ -89,8 +83,7 @@ spec:
         {{ toYaml .Values.store_gateway.extraContainers | nindent 8 }}
         {{- end }}
         - name: store-gateway
-          image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- include "image" .Values.global.image.cortex | nindent 10 }}
           args:
             - "-target=store-gateway"
             - "-config.file=/etc/cortex/cortex.yaml"

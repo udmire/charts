@@ -62,12 +62,6 @@ spec:
       {{- end }}
       initContainers:
         {{- toYaml .Values.index_gateway.initContainers | nindent 8 }}
-      {{- if .Values.image.pullSecrets }}
-      imagePullSecrets:
-      {{- range .Values.image.pullSecrets }}
-        - name: {{ . }}
-      {{- end }}
-      {{- end }}
       nodeSelector:
         {{- toYaml .Values.index_gateway.nodeSelector | nindent 8 }}
       affinity:
@@ -85,7 +79,7 @@ spec:
         {{- toYaml .Values.index_gateway.extraContainers | nindent 8 }}
         {{- end }}
         - name: index-gateway
-          {{- include "image" .Values.image.loki | nindent 10 }}
+          {{- include "image" .Values.global.image.loki | nindent 10 }}
           args:
             - -config.file=/etc/loki/loki.yaml
             - -target=index-gateway

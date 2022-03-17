@@ -2,18 +2,18 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-image:
-  memcached:
-    registry: ""
-    repository: bitnami/memcached
-    tag: 1.6.14-debian-10-r16
-    pullPolicy: IfNotPresent
-  exporter:
-    registry: ""
-    repository: bitnami/memcached-exporter
-    tag: 0.9.0-debian-10-r312
-    pullPolicy: IfNotPresent
-  
+global:
+  image:
+    memcached:
+      registry: ""
+      repository: bitnami/memcached
+      tag: 1.6.14-debian-10-r16
+      pullPolicy: IfNotPresent
+    exporter:
+      registry: ""
+      repository: bitnami/memcached-exporter
+      tag: 0.9.0-debian-10-r312
+      pullPolicy: IfNotPresent
 
 config:
   server:

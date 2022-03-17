@@ -14,6 +14,7 @@ spec:
   selector:
     matchLabels:
       {{- include "cortex.compactorSelectorLabels" . | nindent 6 }}
+      app.kubernetes.io/part-of: memberlist
   updateStrategy:
     {{- toYaml .Values.compactor.strategy | nindent 4 }}
   serviceName: {{ template "cortex.fullname" . }}-compactor
@@ -47,8 +48,8 @@ spec:
         {{- end }}
       annotations:
         checksum/config: {{ include "cortex.configChecksum" . }}
-        {{- with .Values.compactor.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
+        {{- if .Values.compactor.podAnnotations }}
+        {{- include "contentRender" ( dict "value" .Values.compactor.podAnnotations "context" . ) | nindent 8 }}
         {{- end }}
     spec:
       serviceAccountName: {{ .Values.compactor.serviceAccount.name | default (include "cortex.serviceAccountName" . ) }}
@@ -60,12 +61,6 @@ spec:
       {{- end }}
       initContainers:
         {{- toYaml .Values.compactor.initContainers | nindent 8 }}
-      {{- if .Values.image.pullSecrets }}
-      imagePullSecrets:
-      {{- range .Values.image.pullSecrets }}
-        - name: {{ . }}
-      {{- end }}
-      {{- end }}
       nodeSelector:
         {{- toYaml .Values.compactor.nodeSelector | nindent 8 }}
       affinity:
@@ -75,16 +70,15 @@ spec:
       terminationGracePeriodSeconds: {{ .Values.compactor.terminationGracePeriodSeconds }}
       volumes:
         {{- include "cortex.configVolume" . | nindent 8 }}
-        {{- if .Values.compactor.extraVolumes }}
-        {{- toYaml .Values.compactor.extraVolumes | nindent 8 }}
+        {{- with .Values.compactor.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
         {{- end }}
       containers:
         {{- if .Values.compactor.extraContainers }}
         {{ toYaml .Values.compactor.extraContainers | nindent 8 }}
         {{- end }}
         - name: compactor
-          image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- include "image" .Values.global.image.cortex | nindent 10 }}
           args:
             - "-target=compactor"
             - "-config.file=/etc/cortex/cortex.yaml"
@@ -96,7 +90,7 @@ spec:
             {{- toYaml .Values.compactor.extraVolumeMounts | nindent 12}}
             {{- end }}
             - name: config
-              mountPath: /etc/cortex
+              mountPath: /etc/cortex/
             - name: storage
               mountPath: /data
               {{- if .Values.compactor.persistentVolume.subPath }}
@@ -113,6 +107,8 @@ spec:
             {{- toYaml .Values.compactor.startupProbe | nindent 12 }}
           livenessProbe:
             {{- toYaml .Values.compactor.livenessProbe | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.compactor.containerSecurityContext | nindent 12 }}
           readinessProbe:
             {{- toYaml .Values.compactor.readinessProbe | nindent 12 }}
           resources:
@@ -124,4 +120,4 @@ spec:
           env:
             {{- toYaml .Values.compactor.env | nindent 12 }}
           {{- end }}
-{{- end -}}
+{{- end }}

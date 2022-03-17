@@ -46,8 +46,8 @@ spec:
         {{- end }}
       annotations:
         checksum/config: {{ include "alertmanager.configChecksum" . }}
-        {{- with .Values.alertmanager.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
+        {{- if .Values.alertmanager.podAnnotations }}
+        {{- include "contentRender" ( dict "value" .Values.alertmanager.podAnnotations "context" . ) | nindent 8 }}
         {{- end }}
     spec:
       serviceAccountName: {{ .Values.alertmanager.serviceAccount.name | default (include "alertmanager.serviceAccountName" . ) }}
@@ -59,12 +59,6 @@ spec:
       {{- end }}
       initContainers:
         {{- toYaml .Values.alertmanager.initContainers | nindent 8 }}
-      {{- if .Values.image.pullSecrets }}
-      imagePullSecrets:
-      {{- range .Values.image.pullSecrets }}
-        - name: {{ . }}
-      {{- end }}
-      {{- end }}
       nodeSelector:
         {{- toYaml .Values.alertmanager.nodeSelector | nindent 8 }}
       affinity:
@@ -82,8 +76,7 @@ spec:
         {{ toYaml .Values.alertmanager.extraContainers | nindent 8 }}
         {{- end }}
         - name: alertmanager
-          image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- include "image" .Values.global.image.cortex | nindent 10 }}
           args:
             - "-target=alertmanager"
             - "-config.file=/etc/alertmanager/alertmanager.yaml"

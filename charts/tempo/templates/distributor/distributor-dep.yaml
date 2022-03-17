@@ -28,8 +28,8 @@ spec:
         {{- end }}
       annotations:
         checksum/config: {{ include "tempo.configChecksum" . }}
-        {{- with .Values.distributor.podAnnotations }}
-        {{- toYaml . | nindent 8 }}
+        {{- if .Values.distributor.podAnnotations }}
+        {{- include "contentRender" ( dict "value" .Values.distributor.podAnnotations "context" . ) | nindent 8 }}
         {{- end }}
     spec:
       serviceAccountName: {{ .Values.distributor.serviceAccount.name | default (include "tempo.serviceAccountName" . ) }}
@@ -41,16 +41,9 @@ spec:
       {{- end }}
       initContainers:
         {{- toYaml .Values.distributor.initContainers | nindent 8 }}
-      {{- if .Values.image.pullSecrets }}
-      imagePullSecrets:
-      {{- range .Values.image.pullSecrets }}
-        - name: {{ . }}
-      {{- end }}
-      {{- end }}
       containers:
         - name: distributor
-          image: "{{ .Values.image.repository }}:{{ default .Chart.AppVersion .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- include "image" .Values.global.image.tempo | nindent 10 }}
           args:
             - "-target=distributor"
             - "-config.file=/etc/tempo/tempo.yaml"
