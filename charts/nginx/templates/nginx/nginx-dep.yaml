@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "nginx.nginxFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "nginx.nginxLabels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.nginx.annotations | nindent 4 }}
+spec:
+  {{- if not .Values.nginx.autoscaling.enabled }}
+  replicas: {{ .Values.nginx.replicas }}
+  {{- end }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      {{- include "nginx.nginxSelectorLabels" . | nindent 6 }}
+  strategy:
+    {{- toYaml .Values.nginx.strategy | nindent 4 }}
+  template:
+    metadata:
+      labels:
+        {{- include "nginx.nginxLabels" . | nindent 8 }}
+        {{- with .Values.nginx.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        checksum/config: {{ include "nginx.configChecksum" . }}
+        {{- if .Values.nginx.podAnnotations }}
+        {{- include "contentRender" ( dict "value" .Values.nginx.podAnnotations "context" . ) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.nginx.serviceAccount.name | default (include "nginx.serviceAccountName" . ) }}
+      {{- if .Values.nginx.priorityClassName }}
+      priorityClassName: {{ .Values.nginx.priorityClassName }}
+      {{- end }}
+      {{- if .Values.nginx.securityContext.enabled }}
+      securityContext: {{- omit .Values.nginx.securityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- toYaml .Values.nginx.initContainers | nindent 8 }}
+      containers:
+        - name: nginx
+          {{- include "image" .Values.global.image.nginx | nindent 10 }}
+          volumeMounts:
+            {{- if .Values.nginx.extraVolumeMounts }}
+            {{- toYaml .Values.nginx.extraVolumeMounts | nindent 12}}
+            {{- end }}
+            - name: server-block-paths
+              mountPath: /opt/bitnami/nginx/conf/server_blocks
+            - name: server-block
+              mountPath: /opt/bitnami/nginx/conf/server_blocks/common
+          ports:
+            - name: http
+              containerPort: {{ .Values.config.server.httpListenPort }}
+          startupProbe:
+            {{- toYaml .Values.nginx.startupProbe | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.nginx.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.nginx.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.nginx.resources | nindent 12 }}
+          {{- if .Values.nginx.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.nginx.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          env:
+            - name: BITNAMI_DEBUG
+              value: "false"
+            {{- if .Values.nginx.env }}
+            {{- include "contentRender" ( dict "value" .Values.nginx.env "context" . ) | nindent 12 }}
+            {{- end }}
+        {{- if .Values.nginx.metrics.enabled }}
+        - name: metrics
+          {{- include "image" .Values.global.image.nginxExporter | nindent 10 }}
+          command: ['/usr/bin/exporter', '-nginx.scrape-uri', 'http://127.0.0.1:{{- .Values.config.server.httpListenPort }}/status']
+          ports:
+            - name: http-metrics
+              containerPort: {{ .Values.config.server.metricPort }}
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: http-metrics
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: http-metrics
+          {{- if .Values.nginx.metrics.resources }}
+          resources: {{- toYaml .Values.nginx.metrics.resources | nindent 12 }}
+          {{- end }}
+        {{- end }}
+      nodeSelector:
+        {{- toYaml .Values.nginx.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.nginx.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.nginx.tolerations | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.nginx.terminationGracePeriodSeconds }}
+      volumes:
+        {{- include "nginx.configVolume" . | nindent 8 }}
+        {{- if .Values.nginx.extraVolumes }}
+        {{- toYaml .Values.nginx.extraVolumes | nindent 8}}
+        {{- end }}
+
+
+
+      
+      

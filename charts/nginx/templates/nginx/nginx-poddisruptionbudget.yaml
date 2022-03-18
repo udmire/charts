@@ -1,0 +1,14 @@
+{{- if and (gt (int .Values.nginx.replicas) 1) (.Values.nginx.podDisruptionBudget) }}
+apiVersion: {{ include "nginx.pdbVersion" . }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "nginx.nginxFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "nginx.nginxLabels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "nginx.nginxSelectorLabels" . | nindent 6 }}
+  {{- toYaml .Values.nginx.podDisruptionBudget | nindent 2 }}
+{{- end }}

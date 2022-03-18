@@ -1,0 +1,147 @@
+global:
+  image:
+    nginx:
+      registry: ""
+      repository: bitnami/nginx
+      tag: 1.21.6-debian-10-r48
+      pullPolicy: IfNotPresent
+    nginxExporter:
+      registry: ""
+      repository: bitnami/nginx-exporter
+      tag: 0.10.0-debian-10-r81
+      pullPolicy: IfNotPresent
+config:
+  server:
+    httpListenPort: 8080
+    metricPort: 9113
+  serverBlock: |-
+    server {
+    listen {{ .Values.config.server.httpListenPort }};
+    
+    # nginx status
+    location /status {
+      stub_status;
+    }
+
+    }
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+nginx:
+  replicas: 3
+
+  service:
+    annotations: {}
+    labels: {}
+
+  serviceAccount:
+    name:
+
+  serviceMonitor:
+    enabled: false
+    additionalLabels: {}
+    relabelings: []
+    metricRelabelings: []
+    # -- Additional endpoint configuration https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
+    extraEndpointSpec: {}
+
+  resources: {}
+
+  # -- Additional Cortex container arguments, e.g. log.level (debug, info, warn, error)
+  extraArgs: {}
+
+  # -- Pod Labels
+  podLabels: {}
+
+  # -- Pod Annotations
+  podAnnotations: {}
+
+  nodeSelector: {}
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                    - memcached
+            topologyKey: 'kubernetes.io/hostname'
+
+  annotations: {}
+
+  autoscaling:
+    enabled: false
+    minReplicas: 3
+    maxReplicas: 30
+    targetMemoryUtilizationPercentage: 80
+    behavior:
+      scaleDown:
+        policies:
+          - type: Pods
+            value: 1
+            periodSeconds: 1800
+        stabilizationWindowSeconds: 3600
+      scaleUp:
+        policies:
+          - type: Pods
+            value: 1
+            periodSeconds: 1800
+
+  startupProbe: 
+    tcpSocket:
+      port: http
+  livenessProbe:
+    tcpSocket:
+      port: http
+  readinessProbe: 
+    tcpSocket:
+      port: http
+
+  securityContext: {}
+
+  containerSecurityContext:
+    enabled: false
+    readOnlyRootFilesystem: true
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+
+  terminationGracePeriodSeconds: 10
+
+  tolerations: []
+
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  env: 
+  - name: NGINX_HTTP_PORT_NUMBER
+    value: "{{ .Values.config.server.httpListenPort }}"
+
+  metrics:
+    enabled: true
+
+    podAnnotations:
+      prometheus.io/scrape: 'true'
+      prometheus.io/port: '{{ .Values.config.server.metricPort }}'
+
+    startupProbe: {}
+    livenessProbe: {}
+    readinessProbe: {}
+    resources: {}
