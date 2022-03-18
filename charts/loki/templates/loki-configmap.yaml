@@ -28,6 +28,7 @@ data:
           store: memberlist
           prefix: logs/distributor/
     frontend_worker:
+      scheduler_address: {{ template "loki.fullname" . }}-query-scheduler-headless.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.server.grpcListenPort }}
       grpc_client_config:
         max_send_msg_size: 104857600
         grpc_compression: snappy

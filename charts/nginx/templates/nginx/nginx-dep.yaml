@@ -73,7 +73,7 @@ spec:
         {{- if .Values.nginx.metrics.enabled }}
         - name: metrics
           {{- include "image" .Values.global.image.nginxExporter | nindent 10 }}
-          command: ['/usr/bin/exporter', '-nginx.scrape-uri', 'http://127.0.0.1:{{- .Values.config.server.httpListenPort }}/status']
+          command: ['/usr/bin/exporter', '-nginx.scrape-uri', 'http://127.0.0.1:8080/status']
           ports:
             - name: http-metrics
               containerPort: {{ .Values.config.server.metricPort }}

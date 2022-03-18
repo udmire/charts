@@ -12,7 +12,7 @@ global:
       pullPolicy: IfNotPresent
 config:
   server:
-    httpListenPort: 8080
+    httpListenPort: 80
     metricPort: 9113
   serverBlock: |-
     server {
@@ -130,9 +130,7 @@ nginx:
   extraContainers: []
   extraVolumes: []
   extraVolumeMounts: []
-  env: 
-  - name: NGINX_HTTP_PORT_NUMBER
-    value: "{{ .Values.config.server.httpListenPort }}"
+  env: []
 
   metrics:
     enabled: true

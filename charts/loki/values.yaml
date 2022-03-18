@@ -28,7 +28,7 @@ serviceAccount:
 
 config:
   server: 
-    httpListenPort: 3200
+    httpListenPort: 3100
     grpcListenPort: 9095
   memberlist:
     bindPort: 7946
