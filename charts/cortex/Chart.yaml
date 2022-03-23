@@ -9,22 +9,22 @@ dependencies:
   - name: memcached
     alias: memcached-frontend
     version: 0.1.0
-    repository: http://localhost:8080/
+    repository: http://charts.udmire.cn/
     condition: memcached-frontend.enabled
   - name: memcached
     alias: memcached-blocks-index
     version: 0.1.0
-    repository: http://localhost:8080/
+    repository: http://charts.udmire.cn/
     condition: memcached-blocks-index.enabled
   - name: memcached
     alias: memcached-blocks-chunk
     version: 0.1.0
-    repository: http://localhost:8080/
+    repository: http://charts.udmire.cn/
     condition: memcached-blocks-chunk.enabled
   - name: memcached
     alias: memcached-blocks-metadata
     version: 0.1.0
-    repository: http://localhost:8080/
+    repository: http://charts.udmire.cn/
     condition: memcached-blocks-metadata.enabled
   - name: minio
     alias: minio

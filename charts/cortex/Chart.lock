@@ -1,15 +1,15 @@
 dependencies:
 - name: memcached
-  repository: http://localhost:8080/
+  repository: http://charts.udmire.cn/
   version: 0.1.0
 - name: memcached
-  repository: http://localhost:8080/
+  repository: http://charts.udmire.cn/
   version: 0.1.0
 - name: memcached
-  repository: http://localhost:8080/
+  repository: http://charts.udmire.cn/
   version: 0.1.0
 - name: memcached
-  repository: http://localhost:8080/
+  repository: http://charts.udmire.cn/
   version: 0.1.0
 - name: minio
   repository: https://helm.min.io/
