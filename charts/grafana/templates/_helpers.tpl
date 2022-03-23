@@ -88,6 +88,38 @@ Get volume of config secret of configMap
 {{- end -}}
 
 {{/*
+Get checksum of config secret or configMap
+*/}}
+{{- define "grafana.datasourceChecksum" -}}
+{{- include (print $.Template.BasePath "/grafana-datasources.yaml") . | sha256sum -}}
+{{- end -}}
+
+{{/*
+Get volume of config secret of configMap
+*/}}
+{{- define "grafana.datasourceVolume" -}}
+- name: datasources
+  configMap:
+    name: {{ template "grafana.fullname" . }}-datasources
+{{- end -}}
+
+{{/*
+Get checksum of config secret or configMap
+*/}}
+{{- define "grafana.dashboardChecksum" -}}
+{{- include (print $.Template.BasePath "/grafana-dashboards.yaml") . | sha256sum -}}
+{{- end -}}
+
+{{/*
+Get volume of config secret of configMap
+*/}}
+{{- define "grafana.dashboardVolume" -}}
+- name: dashboards
+  configMap:
+    name: {{ template "grafana.fullname" . }}-dashboards
+{{- end -}}
+
+{{/*
 Return the image name
 */}}
 {{- define "image" -}}

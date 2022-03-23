@@ -1,0 +1,20 @@
+{{- if .Values.scraper.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "agent.scraperFullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "agent.scraperLabels" . | nindent 4 }}
+data:
+  agent.yml: |
+    server:
+      log_level: info
+      http_listen_port: {{ .Values.config.server.httpListenPort }}
+    metrics:
+      global:
+        scrape_interval: 1m
+        remote_write: 
+          {{- include "contentRender" ( dict "value" .Values.config.metrics.remoteWrites "context" . ) | nindent 10 }}
+      wal_directory: /var/lib/agent/data
+{{- end }}

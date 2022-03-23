@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "grafana.labels" . | nindent 4 }}
 data:
-  grafana.ini: |-
+  custom.ini: |-
     #################################### Server ##############################
     [server]
     # The HTTP port  to use
@@ -21,3 +21,6 @@ data:
     ha_engine = "redis"
     ha_engine_address = "{{ .Release.Name }}-redis.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:6379"
     {{- end }}
+
+    # custom ini section
+    {{- include "contentRender" ( dict "value" .Values.config.customIni "context" . ) | nindent 4 }}

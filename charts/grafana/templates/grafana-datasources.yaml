@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "grafana.fullname" . }}-datasources
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "grafana.labels" . | nindent 4 }}
+data:
+  datasources.yaml: |-
+    apiVersion: 1
+    datasources:
+      {{- include "contentRender" ( dict "value" .Values.config.datasources "context" . ) | nindent 6 }}

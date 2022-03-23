@@ -13,9 +13,13 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-    - port: {{ .Values.config.server.httpListenPort }}
+    {{- with .Values.config.server.httpListenPorts  }}
+    {{- range $i, $val := . }}
+    - port: {{ $val }}
       protocol: TCP
-      name: http
-      targetPort: http
+      name: http-{{ $i }}
+      targetPort: http-{{ $i }}
+    {{ end -}}
+    {{- end }}
   selector:
     {{- include "nginx.nginxSelectorLabels" . | nindent 4 }}

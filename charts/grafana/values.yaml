@@ -24,7 +24,9 @@ serviceAccount:
 config:
   server: 
     httpListenPort: 3000
-
+  datasources: []
+  dashboards: []
+  customIni: ""
 
 ingress:
   enabled: false
@@ -121,7 +123,7 @@ grafana:
   securityContext: {}
 
   containerSecurityContext:
-    enabled: true
+    enabled: false
     readOnlyRootFilesystem: true
 
   strategy:

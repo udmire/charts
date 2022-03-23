@@ -25,6 +25,8 @@ spec:
         {{- end }}
       annotations:
         checksum/config: {{ include "grafana.configChecksum" . }}
+        checksum/datasource: {{ include "grafana.datasourceChecksum" . }}
+        checksum/dashboard: {{ include "grafana.dashboardChecksum" . }}
         {{- if .Values.grafana.podAnnotations }}
         {{- include "contentRender" ( dict "value" .Values.grafana.podAnnotations "context" . ) | nindent 8 }}
         {{- end }}
@@ -42,7 +44,7 @@ spec:
         - name: grafana
           {{- include "image" .Values.global.image.grafana | nindent 10 }}
           args:
-            - "-config=/etc/grafana/grafana.ini"
+            - "-config=/etc/grafana/custom.ini"
           {{- range $key, $value := .Values.grafana.extraArgs }}
             - "-{{ $key }}={{ $value }}"
           {{- end }}
@@ -51,7 +53,13 @@ spec:
             {{- toYaml .Values.grafana.extraVolumeMounts | nindent 12}}
             {{- end }}
             - name: config
-              mountPath: /etc/grafana
+              mountPath: /etc/grafana/
+            - name: datasources
+              mountPath: /etc/grafana/provisioning/datasources/
+              readOnly: false
+            - name: dashboards
+              mountPath: /etc/grafana/provisioning/dashboards
+              readOnly: false
             - mountPath: /var/lib/grafana
               name: grafana-storage
           ports:
@@ -89,6 +97,8 @@ spec:
       terminationGracePeriodSeconds: {{ .Values.grafana.terminationGracePeriodSeconds }}
       volumes:
         {{- include "grafana.configVolume" . | nindent 8 }}
+        {{- include "grafana.datasourceVolume" . | nindent 8 }}
+        {{- include "grafana.dashboardVolume" . | nindent 8 }}
         - emptyDir: {}
           name: grafana-storage
         {{- if .Values.grafana.extraVolumes }}

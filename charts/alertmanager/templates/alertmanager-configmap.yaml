@@ -35,6 +35,7 @@ data:
         kvstore:
           store: memberlist
           prefix: alertmanager/
+      fallback_config_file: /etc/alertmanager/default_conf.yaml
     alertmanager_storage:
       {{- if .Values.global.storage.backend }}
       backend: {{.Values.global.storage.backend}}
@@ -80,3 +81,12 @@ data:
     
   runtime_config.yaml: |-
     overrides: {}
+  default_conf.yaml: |-
+    route:
+      receiver: 'default-receiver'
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 6h
+    receivers:
+      - name: default-receiver
+        {{- include "contentRender" ( dict "value" .Values.config.defaultReceivers "context" . ) | nindent 8 }}

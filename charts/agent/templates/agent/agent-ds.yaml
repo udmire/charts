@@ -1,0 +1,87 @@
+{{- if .Values.agent.enabled }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "agent.agentFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "agent.agentLabels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.agent.annotations | nindent 4 }}
+spec:
+  minReadySeconds: 10
+  selector:
+    matchLabels:
+      {{- include "agent.agentSelectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "agent.agentLabels" . | nindent 8 }}
+        {{- with .Values.agent.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        checksum/config: {{ include "agent.agentConfigChecksum" . }}
+        {{- if .Values.agent.podAnnotations }}
+        {{- include "contentRender" ( dict "value" .Values.agent.podAnnotations "context" . ) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.agent.serviceAccount.name | default (include "agent.serviceAccountName" . ) }}
+      {{- if .Values.agent.priorityClassName }}
+      priorityClassName: {{ .Values.agent.priorityClassName }}
+      {{- end }}
+      {{- if .Values.agent.securityContext.enabled }}
+      securityContext: {{- omit .Values.agent.securityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- toYaml .Values.agent.initContainers | nindent 8 }}
+      containers:
+        - name: agent
+          {{- include "image" .Values.global.image.agent | nindent 10 }}
+          command:
+            - /bin/agent
+          args:
+            - -config.file=/etc/agent/agent.yml
+            - -prometheus.wal-directory=/tmp/agent/data
+          volumeMounts:
+            {{- if .Values.agent.extraVolumeMounts }}
+            {{- toYaml .Values.agent.extraVolumeMounts | nindent 12}}
+            {{- end }}
+            - mountPath: /etc/agent
+              name: {{ template "agent.agentFullname" . }}-config
+          ports:
+            - name: http-metrics
+              containerPort: {{ .Values.config.server.httpListenPort }}
+              protocol: TCP
+          startupProbe:
+            {{- toYaml .Values.agent.startupProbe | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.agent.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.agent.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.agent.resources | nindent 12 }}
+          {{- if .Values.agent.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.agent.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          env:
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            {{- if .Values.agent.env }}
+              {{- toYaml .Values.agent.env | nindent 12 }}
+            {{- end }}
+          {{- with .Values.agent.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        {{- if .Values.agent.extraContainers }}
+        {{- toYaml .Values.agent.extraContainers | nindent 8}}
+        {{- end }}
+      volumes:
+        {{- include "agent.agentConfigVolume" . | nindent 8 }}
+        {{- if .Values.agent.extraVolumes }}
+        {{- toYaml .Values.agent.extraVolumes | nindent 8}}
+        {{- end }}
+{{- end -}}

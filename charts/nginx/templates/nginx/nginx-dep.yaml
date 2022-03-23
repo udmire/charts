@@ -51,8 +51,12 @@ spec:
             - name: server-block
               mountPath: /opt/bitnami/nginx/conf/server_blocks/common
           ports:
-            - name: http
-              containerPort: {{ .Values.config.server.httpListenPort }}
+            {{- with .Values.config.server.httpListenPorts  }}
+            {{- range $i, $val := . }}
+            - name: http-{{ $i }}
+              containerPort: {{ $val }}
+            {{ end -}}
+            {{- end }}
           startupProbe:
             {{- toYaml .Values.nginx.startupProbe | nindent 12 }}
           livenessProbe:

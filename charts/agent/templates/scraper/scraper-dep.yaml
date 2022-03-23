@@ -1,0 +1,91 @@
+{{- if .Values.scraper.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "agent.scraperFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "agent.scraperLabels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.scraper.annotations | nindent 4 }}
+spec:
+  {{- if not .Values.scraper.autoscaling.enabled }}
+  replicas: {{ .Values.scraper.replicas }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "agent.scraperSelectorLabels" . | nindent 6 }}
+  strategy:
+    {{- toYaml .Values.scraper.strategy | nindent 4 }}
+  template:
+    metadata:
+      labels:
+        {{- include "agent.scraperLabels" . | nindent 8 }}
+        {{- with .Values.scraper.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        checksum/config: {{ include "agent.scraperConfigChecksum" . }}
+        {{- if .Values.scraper.podAnnotations }}
+        {{- include "contentRender" ( dict "value" .Values.scraper.podAnnotations "context" . ) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.scraper.serviceAccount.name | default (include "agent.serviceAccountName" . ) }}
+      {{- if .Values.scraper.priorityClassName }}
+      priorityClassName: {{ .Values.scraper.priorityClassName }}
+      {{- end }}
+      {{- if .Values.scraper.securityContext.enabled }}
+      securityContext: {{- omit .Values.scraper.securityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- toYaml .Values.scraper.initContainers | nindent 8 }}
+      containers:
+        - name: scraper
+          {{- include "image" .Values.global.image.agent | nindent 10 }}
+          command:
+            - /bin/agent
+          args:
+            - -config.file=/etc/agent/agent.yml
+            - -prometheus.wal-directory=/tmp/agent/data
+          volumeMounts:
+            {{- if .Values.scraper.extraVolumeMounts }}
+            {{- toYaml .Values.scraper.extraVolumeMounts | nindent 12}}
+            {{- end }}
+            - mountPath: /etc/agent
+              name: {{ template "agent.scraperFullname" . }}-config
+          ports:
+            - name: http-metrics
+              containerPort: {{ .Values.config.server.httpListenPort }}
+              protocol: TCP
+          startupProbe:
+            {{- toYaml .Values.scraper.startupProbe | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.scraper.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.scraper.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.scraper.resources | nindent 12 }}
+          {{- if .Values.scraper.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.scraper.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          env:
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            {{- if .Values.scraper.env }}
+              {{- toYaml .Values.scraper.env | nindent 12 }}
+            {{- end }}
+          {{- with .Values.scraper.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        {{- if .Values.scraper.extraContainers }}
+        {{- toYaml .Values.scraper.extraContainers | nindent 8}}
+        {{- end }}
+      volumes:
+        {{- include "agent.scraperConfigVolume" . | nindent 8 }}
+        {{- if .Values.scraper.extraVolumes }}
+        {{- toYaml .Values.scraper.extraVolumes | nindent 8}}
+        {{- end }}
+{{- end }}

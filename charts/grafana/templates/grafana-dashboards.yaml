@@ -1,0 +1,13 @@
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "grafana.fullname" . }}-dashboards
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "grafana.labels" . | nindent 4 }}
+data:
+  default-dashboards.yaml: |-
+    apiVersion: 1
+    providers:
+      {{- include "contentRender" ( dict "value" .Values.config.dashboards "context" . ) | nindent 6 }}

@@ -12,24 +12,34 @@ If release name contains chart name it will be used as a full name.
 */}}
 {{- define "agent.fullname" -}}
 {{- if .Values.fullnameOverride }}
-{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
-{{- else }}
-{{- $name := default .Chart.Name .Values.nameOverride }}
-{{- if contains $name .Release.Name }}
-{{- .Release.Name | trunc 63 | trimSuffix "-" }}
-{{- else }}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
-{{- end }}
-{{- end }}
-{{- end }}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default .Chart.Name .Values.nameOverride -}}
+{{- if contains $name .Release.Name -}}
+{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
 
 {{/*
 Create chart name and version as used by the chart label.
 */}}
 {{- define "agent.chart" -}}
-{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
-{{- end }}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
 
+{{/*
+Create the name of the service account to use
+*/}}
+{{- define "agent.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create -}}
+    {{ default (include "agent.fullname" .) .Values.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.serviceAccount.name }}
+{{- end -}}
+{{- end -}}
 {{/*
 Common labels
 */}}
@@ -51,12 +61,30 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Create the name of the service account to use
+Return the image name
 */}}
-{{- define "agent.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "agent.fullname" .) .Values.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.serviceAccount.name }}
-{{- end }}
-{{- end }}
+{{- define "image" -}}
+{{- $registryName := .registry -}}
+{{- $repositoryName := .repository -}}
+{{- $tag := .tag | toString -}}
+{{- $pullPolicy := .pullPolicy -}}
+{{- if $registryName }}
+image: '{{- printf "%s/%s:%s" $registryName $repositoryName $tag -}}'
+imagePullPolicy: '{{- printf "%s" $pullPolicy -}}'
+{{- else -}}
+image: '{{- printf "%s:%s" $repositoryName $tag -}}'
+imagePullPolicy: '{{- printf "%s" $pullPolicy -}}'
+{{- end -}}
+{{- end -}}
+
+{{/*
+Renders a value that contains template.
+{{ include "contentRender" ( dict "value" .Values.path.to.the.Value "context" $) }}
+*/}}
+{{- define "contentRender" -}}
+    {{- if typeIs "string" .value }}
+        {{- tpl .value .context }}
+    {{- else }}
+        {{- tpl (.value | toYaml) .context }}
+    {{- end }}
+{{- end -}}
