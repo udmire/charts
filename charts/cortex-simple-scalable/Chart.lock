@@ -1,0 +1,21 @@
+dependencies:
+- name: common
+  repository: http://127.0.0.1:8080/
+  version: 0.1.0
+- name: memcached
+  repository: http://charts.udmire.cn/
+  version: 0.1.0
+- name: memcached
+  repository: http://charts.udmire.cn/
+  version: 0.1.0
+- name: memcached
+  repository: http://charts.udmire.cn/
+  version: 0.1.0
+- name: memcached
+  repository: http://charts.udmire.cn/
+  version: 0.1.0
+- name: minio
+  repository: https://helm.min.io/
+  version: 8.0.9
+digest: sha256:a0afa5dbb647ed7b9f2935e8628443284ffe0b5180a44b98bfacbcdf4086965e
+generated: "2022-03-28T18:08:21.310295+08:00"

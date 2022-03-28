@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "cortex.readFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "cortex.readLabels" . | nindent 4 }}
+    app.kubernetes.io/part-of: memberlist
+  annotations:
+    {{- toYaml .Values.read.annotations | nindent 4 }}
+spec:
+  replicas: {{ .Values.read.replicas }}
+  selector:
+    matchLabels:
+      {{- include "cortex.readSelectorLabels" . | nindent 6 }}
+  updateStrategy:
+    {{- toYaml .Values.read.strategy | nindent 4 }}
+  serviceName: {{ template "cortex.fullname" . }}-read-headless
+  {{- if .Values.read.persistentVolume.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: storage
+        {{- if .Values.read.persistentVolume.annotations }}
+        annotations:
+          {{ toYaml .Values.read.persistentVolume.annotations | nindent 10 }}
+        {{- end }}
+      spec:
+        {{- if .Values.read.persistentVolume.storageClass }}
+        {{- if (eq "-" .Values.read.persistentVolume.storageClass) }}
+        storageClassName: ""
+        {{- else }}
+        storageClassName: "{{ .Values.read.persistentVolume.storageClass }}"
+        {{- end }}
+        {{- end }}
+        accessModes:
+          {{- toYaml .Values.read.persistentVolume.accessModes | nindent 10 }}
+        resources:
+          requests:
+            storage: "{{ .Values.read.persistentVolume.size }}"
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- include "cortex.readLabels" . | nindent 8 }}
+        app.kubernetes.io/part-of: memberlist
+        {{- with .Values.read.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        checksum/config: {{ include "cortex.configChecksum" . }}
+        {{- if .Values.read.podAnnotations }}
+        {{- include "ContentRender" ( dict "value" .Values.read.podAnnotations "context" . ) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.read.serviceAccount.name | default (include "cortex.serviceAccountName" . ) }}
+      {{- if .Values.read.priorityClassName }}
+      priorityClassName: {{ .Values.read.priorityClassName }}
+      {{- end }}
+      {{- if .Values.read.securityContext.enabled }}
+      securityContext: {{- omit .Values.read.securityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- toYaml .Values.read.initContainers | nindent 8 }}
+      nodeSelector:
+        {{- toYaml .Values.read.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.read.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.read.tolerations | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.read.terminationGracePeriodSeconds }}
+      volumes:
+        {{- include "cortex.configVolume" . | nindent 8 }}
+        {{- if not .Values.read.persistentVolume.enabled }}
+        - name: storage
+          emptyDir: {}
+        {{- end }}
+        {{- if .Values.read.extraVolumes }}
+        {{- toYaml .Values.read.extraVolumes | nindent 8 }}
+        {{- end }}
+      containers:
+        {{- if .Values.read.extraContainers }}
+        {{ toYaml .Values.read.extraContainers | nindent 8 }}
+        {{- end }}
+        - name: read
+          {{- include "Image" .Values.global.image.cortex | nindent 10 }}
+          args:
+            - "-target={{- .Values.config.targets.read }}"
+            - "-config.file=/etc/cortex/cortex.yaml"
+            {{- range $key, $value := .Values.read.extraArgs }}
+            - "-{{ $key }}={{ $value }}"
+            {{- end }}
+          volumeMounts:
+            {{- if .Values.read.extraVolumeMounts }}
+            {{- toYaml .Values.read.extraVolumeMounts | nindent 12}}
+            {{- end }}
+            - name: config
+              mountPath: /etc/cortex
+            - name: storage
+              mountPath: "/data"
+              {{- if .Values.read.persistentVolume.subPath }}
+              subPath: {{ .Values.read.persistentVolume.subPath }}
+              {{- end }}
+          ports:
+            - name: http-metrics
+              containerPort: {{ .Values.config.server.httpListenPort }}
+              protocol: TCP
+            - name: grpc
+              containerPort: {{ .Values.config.server.grpcListenPort }}
+              protocol: TCP
+            - name: gossip
+              containerPort: {{ .Values.config.memberlist.bindPort }}
+              protocol: TCP
+          startupProbe:
+            {{- toYaml .Values.read.startupProbe | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.read.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.read.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.read.resources | nindent 12 }}
+          {{- if .Values.read.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.read.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.read.env }}
+          env:
+            {{- toYaml .Values.read.env | nindent 12 }}
+          {{- end }}

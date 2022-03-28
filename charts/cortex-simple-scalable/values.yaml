@@ -1,0 +1,417 @@
+# Default values for cortex.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+global:
+  image:
+    cortex:
+      registry: ""
+      repository: cortexproject/cortex
+      tag: "v1.11.0"
+      pullPolicy: IfNotPresent
+  # -- Kubernetes cluster DNS domain
+  clusterDomain: cluster.local
+  storage:
+    buckets:
+      metricData: &metricDataBucket "metric-data"
+      metricRule: &metricRuleBucket "metric-rule"
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+nameOverride: "cortex"
+fullnameOverride: ""
+
+config:
+  server: 
+    httpListenPort: 8080
+    grpcListenPort: 9095
+  memberlist:
+    bindPort: 7946
+  ruler:
+    alertmanager:
+      alertmanager_url: https://alertmanager.xx
+      # url: http://_http-metrics._tcp.{{ .Release.Name }}-alertmanager.{{ .Release.Namespace }}-common/alertmanager/
+      external_url: https://alertmanager.xx
+      enable_alertmanager_discovery: false
+  targets:
+    read: query-scheduler,query-frontend,querier,ruler,compactor
+    write: distributor,ingester
+
+write:
+  replicas: 3
+
+  statefulSet:
+    # -- ref: https://cortexmetrics.io/docs/guides/ingesters-scaling-up-and-down/#scaling-down and https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#pod-management-policies for scaledown details
+    podManagementPolicy: OrderedReady
+
+  service:
+    annotations: {}
+    labels: {}
+
+  serviceAccount:
+    name:
+
+  serviceMonitor:
+    enabled: false
+    additionalLabels: {}
+    relabelings: []
+    metricRelabelings: []
+    # -- Additional endpoint configuration https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
+    extraEndpointSpec: {}
+
+  resources: {}
+
+  # -- Additional Cortex container arguments, e.g. log.level (debug, info, warn, error)
+  extraArgs: {}
+
+  # -- Pod Labels
+  podLabels: {}
+
+  # -- Pod Annotations
+  podAnnotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '8080'
+
+  nodeSelector: {}
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                    - ingester
+            topologyKey: 'kubernetes.io/hostname'
+
+  annotations: {}
+
+  autoscaling:
+    enabled: false
+    minReplicas: 3
+    maxReplicas: 30
+    targetMemoryUtilizationPercentage: 80
+    behavior:
+      scaleDown:
+        # -- see https://cortexmetrics.io/docs/guides/ingesters-scaling-up-and-down/#scaling-down for scaledown details
+        policies:
+          - type: Pods
+            value: 1
+            # set to no less than 2x the maximum between -blocks-storage.bucket-store.sync-interval and -compactor.cleanup-interval
+            periodSeconds: 1800
+        # -- uses metrics from the past 1h to make scaleDown decisions
+        stabilizationWindowSeconds: 3600
+      scaleUp:
+        # -- This default scaleup policy allows adding 1 pod every 30 minutes.
+        # Ref: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#support-for-configurable-scaling-behavior
+        policies:
+          - type: Pods
+            value: 1
+            periodSeconds: 1800
+
+  lifecycle:
+    # -- The /shutdown preStop hook is recommended as part of the ingester
+    # scaledown process, but can be removed to optimize rolling restarts in
+    # instances that will never be scaled down or when using chunks storage
+    # with WAL disabled.
+    # https://cortexmetrics.io/docs/guides/ingesters-scaling-up-and-down/#scaling-down
+    preStop:
+      httpGet:
+        path: "/ingester/shutdown"
+        port: http-metrics
+
+  persistentVolume:
+    # -- If true and ingester.statefulSet.enabled is true,
+    # Ingester will create/use a Persistent Volume Claim
+    # If false, use emptyDir
+    enabled: true
+
+    # -- Ingester data Persistent Volume Claim annotations
+    annotations: {}
+
+    # -- Ingester data Persistent Volume access modes
+    # Must match those of existing PV or dynamic provisioner
+    # Ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+    accessModes:
+      - ReadWriteOnce
+
+    # -- Ingester data Persistent Volume size
+    size: 2Gi
+
+    # -- Subdirectory of Ingester data Persistent Volume to mount
+    # Useful if the volume's root directory is not empty
+    subPath: ''
+
+    # -- Ingester data Persistent Volume Storage Class
+    # If defined, storageClassName: <storageClass>
+    # If set to "-", storageClassName: "", which disables dynamic provisioning
+    # If undefined (the default) or set to null, no storageClassName spec is
+    # set, choosing the default provisioner.
+    storageClass: null
+
+  # -- Startup/liveness probes for ingesters are not recommended.
+  #  Ref: https://cortexmetrics.io/docs/guides/running-cortex-on-kubernetes/#take-extra-care-with-ingesters
+  startupProbe: {}
+
+  # -- Startup/liveness probes for ingesters are not recommended.
+  #  Ref: https://cortexmetrics.io/docs/guides/running-cortex-on-kubernetes/#take-extra-care-with-ingesters
+  livenessProbe: {}
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+
+  securityContext: {}
+
+  containerSecurityContext:
+    enabled: true
+    readOnlyRootFilesystem: true
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  statefulStrategy:
+    type: RollingUpdate
+
+  terminationGracePeriodSeconds: 240
+
+  tolerations: []
+
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraPorts: []
+  env: []
+
+read:
+  replicas: 3
+
+  service:
+    annotations: {}
+    labels: {}
+
+  serviceAccount:
+    # -- "" disables the individual serviceAccount and uses the global serviceAccount for that component
+    name: ""
+
+  serviceMonitor:
+    enabled: false
+    additionalLabels: {}
+    relabelings: []
+    metricRelabelings: []
+    # -- Additional endpoint configuration https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
+    extraEndpointSpec: {}
+
+  resources: {}
+
+  # -- Additional Cortex container arguments, e.g. log.level (debug, info, warn, error)
+  extraArgs: {}
+
+  # -- Pod Labels
+  podLabels: {}
+
+  # -- Pod Annotations
+  podAnnotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '8080'
+
+  nodeSelector: {}
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                    - store-gateway
+            topologyKey: 'kubernetes.io/hostname'
+
+  annotations: {}
+
+  persistentVolume:
+    # -- If true Store-gateway will create/use a Persistent Volume Claim
+    # If false, use emptyDir
+    enabled: true
+
+    # -- Store-gateway data Persistent Volume Claim annotations
+    annotations: {}
+
+    # -- Store-gateway data Persistent Volume access modes
+    # Must match those of existing PV or dynamic provisioner
+    # Ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+    accessModes:
+      - ReadWriteOnce
+
+    # -- Store-gateway data Persistent Volume size
+    size: 2Gi
+
+    # -- Subdirectory of Store-gateway data Persistent Volume to mount
+    # Useful if the volume's root directory is not empty
+    subPath: ''
+
+    # -- Store-gateway data Persistent Volume Storage Class
+    # If defined, storageClassName: <storageClass>
+    # If set to "-", storageClassName: "", which disables dynamic provisioning
+    # If undefined (the default) or set to null, no storageClassName spec is
+    # set, choosing the default provisioner.
+    storageClass: null
+
+  startupProbe:
+    failureThreshold: 60
+    initialDelaySeconds: 120
+    periodSeconds: 30
+    httpGet:
+      path: /ready
+      port: http-metrics
+      scheme: HTTP
+  livenessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+      scheme: HTTP
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+
+  securityContext: {}
+
+  containerSecurityContext:
+    enabled: true
+    readOnlyRootFilesystem: true
+
+  strategy:
+    type: RollingUpdate
+
+  terminationGracePeriodSeconds: 240
+
+  tolerations: []
+
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraPorts: []
+  env: []
+
+memcached-frontend:
+  enabled: true
+  replicas: 2
+  resources: {}
+  env:
+    # -- MEMCACHED_CACHE_SIZE is the amount of memory allocated to memcached for object storage
+    - name: MEMCACHED_CACHE_SIZE
+      value: "1024"
+    # -- MEMCACHED_MAX_CONNECTIONS is the maximum number of simultaneous connections to the memcached service
+    - name: MEMCACHED_MAX_CONNECTIONS
+      value: "1024"
+    # -- MEMCACHED_THREADS is the number of threads to use when processing incoming requests.
+    # By default, memcached is configured to use 4 concurrent threads. The threading improves the performance of
+    # storing and retrieving data in the cache, using a locking system to prevent different threads overwriting or updating the same values.
+    - name: MEMCACHED_THREADS
+      value: "4"
+  metrics:
+    enabled: true
+  serviceMonitor:
+    enabled: false
+
+memcached-blocks-index:
+  enabled: true
+  replicas: 2
+  resources: {}
+  env:
+    # -- MEMCACHED_CACHE_SIZE is the amount of memory allocated to memcached for object storage
+    - name: MEMCACHED_CACHE_SIZE
+      value: "1024"
+    # -- MEMCACHED_MAX_CONNECTIONS is the maximum number of simultaneous connections to the memcached service
+    - name: MEMCACHED_MAX_CONNECTIONS
+      value: "1024"
+    # -- MEMCACHED_THREADS is the number of threads to use when processing incoming requests.
+    # By default, memcached is configured to use 4 concurrent threads. The threading improves the performance of
+    # storing and retrieving data in the cache, using a locking system to prevent different threads overwriting or updating the same values.
+    - name: MEMCACHED_THREADS
+      value: "4"
+  metrics:
+    enabled: true
+  serviceMonitor:
+    enabled: false
+
+memcached-blocks-chunk:
+  enabled: true
+  replicas: 2
+  resources: {}
+  env:
+    # -- MEMCACHED_CACHE_SIZE is the amount of memory allocated to memcached for object storage
+    - name: MEMCACHED_CACHE_SIZE
+      value: "1024"
+    # -- MEMCACHED_MAX_CONNECTIONS is the maximum number of simultaneous connections to the memcached service
+    - name: MEMCACHED_MAX_CONNECTIONS
+      value: "1024"
+    # -- MEMCACHED_THREADS is the number of threads to use when processing incoming requests.
+    # By default, memcached is configured to use 4 concurrent threads. The threading improves the performance of
+    # storing and retrieving data in the cache, using a locking system to prevent different threads overwriting or updating the same values.
+    - name: MEMCACHED_THREADS
+      value: "4"
+  metrics:
+    enabled: true
+  serviceMonitor:
+    enabled: false
+
+memcached-blocks-metadata:
+  enabled: true
+  replicas: 2
+  resources: {}
+  env:
+    # -- MEMCACHED_CACHE_SIZE is the amount of memory allocated to memcached for object storage
+    - name: MEMCACHED_CACHE_SIZE
+      value: "1024"
+    # -- MEMCACHED_MAX_CONNECTIONS is the maximum number of simultaneous connections to the memcached service
+    - name: MEMCACHED_MAX_CONNECTIONS
+      value: "1024"
+    # -- MEMCACHED_THREADS is the number of threads to use when processing incoming requests.
+    # By default, memcached is configured to use 4 concurrent threads. The threading improves the performance of
+    # storing and retrieving data in the cache, using a locking system to prevent different threads overwriting or updating the same values.
+    - name: MEMCACHED_THREADS
+      value: "4"
+  metrics:
+    enabled: true
+  serviceMonitor:
+    enabled: false
+
+minio:
+  enabled: true
+  accessKey: metrics
+  secretKey: supersecret
+  buckets:
+    - name: *metricDataBucket
+      policy: none
+      purge: false
+    - name: *metricRuleBucket
+      policy: none
+      purge: false
+  persistence:
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi

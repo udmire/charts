@@ -1,0 +1,14 @@
+{{- if and (gt (int .Values.read.replicas) 1) (.Values.read.podDisruptionBudget) }}
+apiVersion: {{ include "cortex.pdbVersion" . }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "cortex.readFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "cortex.readLabels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "cortex.readSelectorLabels" . | nindent 6 }}
+  {{- toYaml .Values.read.podDisruptionBudget | nindent 2 }}
+{{- end }}
