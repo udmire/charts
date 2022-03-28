@@ -13,13 +13,9 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-    {{- with .Values.config.server.httpListenPorts  }}
-    {{- range $i, $val := . }}
-    - port: {{ $val }}
+    - port: 4050
       protocol: TCP
-      name: http-{{ $i }}
-      targetPort: http-{{ $i }}
-    {{ end -}}
-    {{- end }}
+      name: http-metrics
+      targetPort: http-metrics
   selector:
     {{- include "synthetic.agentSelectorLabels" . | nindent 4 }}
