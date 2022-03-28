@@ -1,0 +1,100 @@
+{{- if .Values.querier.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cortex.querierFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "cortex.querierLabels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.querier.annotations | nindent 4 }}
+spec:
+  {{- if not .Values.querier.autoscaling.enabled }}
+  replicas: {{ .Values.querier.replicas }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "cortex.querierSelectorLabels" . | nindent 6 }}
+  strategy:
+    {{- toYaml .Values.querier.strategy | nindent 4 }}
+  template:
+    metadata:
+      labels:
+        {{- include "cortex.querierLabels" . | nindent 8 }}
+        {{- with .Values.querier.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        checksum/config: {{ include "cortex.configChecksum" . }}
+        {{- if .Values.querier.podAnnotations }}
+        {{- include "ContentRender" ( dict "value" .Values.querier.podAnnotations "context" . ) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.querier.serviceAccount.name | default (include "cortex.serviceAccountName" . ) }}
+      {{- if .Values.querier.priorityClassName }}
+      priorityClassName: {{ .Values.querier.priorityClassName }}
+      {{- end }}
+      {{- if .Values.querier.securityContext.enabled }}
+      securityContext: {{- omit .Values.querier.securityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- toYaml .Values.querier.initContainers | nindent 8 }}
+      containers:
+        - name: querier
+          {{- include "Image" .Values.global.image.cortex | nindent 10 }}
+          args:
+            - "-target=querier"
+            - "-config.file=/etc/cortex/cortex.yaml"
+          {{- range $key, $value := .Values.querier.extraArgs }}
+            - "-{{ $key }}={{ $value }}"
+          {{- end }}
+          volumeMounts:
+            {{- if .Values.querier.extraVolumeMounts }}
+            {{- toYaml .Values.querier.extraVolumeMounts | nindent 12}}
+            {{- end }}
+            - name: config
+              mountPath: /etc/cortex
+            - name: storage
+              mountPath: "/data"
+              subPath: {{ .Values.querier.persistentVolume.subPath }}
+          ports:
+            - name: http-metrics
+              containerPort: {{ .Values.config.server.httpListenPort }}
+              protocol: TCP
+          startupProbe:
+            {{- toYaml .Values.querier.startupProbe | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.querier.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.querier.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.querier.resources | nindent 12 }}
+          {{- if .Values.querier.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.querier.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          env:
+            {{- if .Values.querier.env }}
+              {{- toYaml .Values.querier.env | nindent 12 }}
+            {{- end }}
+          {{- with .Values.querier.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        {{- if .Values.querier.extraContainers }}
+        {{- toYaml .Values.querier.extraContainers | nindent 8}}
+        {{- end }}
+      nodeSelector:
+        {{- toYaml .Values.querier.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.querier.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.querier.tolerations | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.querier.terminationGracePeriodSeconds }}
+      volumes:
+        {{- include "cortex.configVolume" . | nindent 8 }}
+        - name: storage
+          emptyDir: {}
+        {{- if .Values.querier.extraVolumes }}
+        {{- toYaml .Values.querier.extraVolumes | nindent 8}}
+        {{- end }}
+{{- end -}}
