@@ -29,7 +29,7 @@ spec:
       annotations:
         checksum/config: {{ include "loki.configChecksum" . }}
         {{- if .Values.querier.podAnnotations }}
-        {{- include "contentRender" ( dict "value" .Values.querier.podAnnotations "context" . ) | nindent 8 }}
+        {{- include "ContentRender" ( dict "value" .Values.querier.podAnnotations "context" . ) | nindent 8 }}
         {{- end }}
     spec:
       serviceAccountName: {{ .Values.querier.serviceAccount.name | default (include "loki.serviceAccountName" . ) }}
@@ -43,7 +43,7 @@ spec:
         {{- toYaml .Values.querier.initContainers | nindent 8 }}
       containers:
         - name: querier
-          {{- include "image" .Values.global.image.loki | nindent 10 }}
+          {{- include "Image" .Values.global.image.loki | nindent 10 }}
           args:
             - -config.file=/etc/loki/loki.yaml
             - -target=querier

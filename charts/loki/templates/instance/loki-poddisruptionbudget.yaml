@@ -1,0 +1,14 @@
+{{- if and (gt (int .Values.instance.replicas) 1) (.Values.instance.podDisruptionBudget) }}
+apiVersion: {{ include "loki.pdbVersion" . }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "loki.instanceFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "loki.instanceLabels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "loki.instanceSelectorLabels" . | nindent 6 }}
+  {{- toYaml .Values.instance.podDisruptionBudget | nindent 2 }}
+{{- end }}
