@@ -37,7 +37,7 @@ entries:
     name: common
     type: library
     urls:
-    - charts/common-0.1.0.tgz
+    - https://udmire.github.io/charts/common-0.1.0.tgz
     version: 0.1.0
   cortex:
   - apiVersion: v2
