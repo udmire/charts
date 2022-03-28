@@ -28,6 +28,17 @@ entries:
     urls:
     - https://udmire.github.io/charts/alertmanager-0.1.0.tgz
     version: 0.1.0
+  common:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2022-03-28T13:58:29.5828296Z"
+    description: A Helm chart for Kubernetes
+    digest: 6862e07da6c650662793e0dac0745151e213ae8512215b38e9a23e9c436c970c
+    name: common
+    type: library
+    urls:
+    - charts/common-0.1.0.tgz
+    version: 0.1.0
   cortex:
   - apiVersion: v2
     appVersion: 1.16.0
