@@ -1,17 +1,17 @@
-{{- if  .Values.nginx.autoscaling.enabled -}}
-{{- with .Values.nginx.autoscaling -}}
+{{- if  .Values.agent.autoscaling.enabled -}}
+{{- with .Values.agent.autoscaling -}}
 apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "nginx.nginxFullname" . }}
+  name: {{ include "synthetic.agentFullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "nginx.nginxLabels" . | nindent 4 }}
+    {{- include "synthetic.agentLabels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "nginx.nginxFullname" . }}
+    name: {{ include "synthetic.agentFullname" . }}
   minReplicas: {{ .minReplicas }}
   maxReplicas: {{ .maxReplicas }}
   metrics:
