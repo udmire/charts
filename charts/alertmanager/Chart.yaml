@@ -24,6 +24,9 @@ version: 0.1.0
 appVersion: "1.16.0"
 
 dependencies:
+  - name: common
+    version: 0.1.0
+    repository: http://127.0.0.1:8080/
   - name: minio
     alias: minio
     version: 8.0.9

@@ -45,10 +45,10 @@ data:
       {{- end }}
       {{- if eq .Values.global.storage.backend "s3"}}
       s3:
-        endpoint: {{ .Values.global.storage.s3.endpoint }}
-        bucket_name: {{ .Values.global.storage.buckets.alertData }}
-        access_key_id: {{ .Values.global.storage.s3.accessKey }}
-        secret_access_key: {{ .Values.global.storage.s3.secretKey }}
+        endpoint: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.endpoint "context" . ) }}
+        bucket_name: {{ include "ContentRender" ( dict "value" .Values.global.storage.buckets.alertData "context" . ) }}
+        access_key_id: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.accessKey "context" . ) }}
+        secret_access_key: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.secretKey "context" . ) }}
         insecure: {{ default true .Values.global.storage.s3.insecure }}
         http:
           insecure_skip_verify: true
@@ -89,4 +89,6 @@ data:
       repeat_interval: 6h
     receivers:
       - name: default-receiver
-        {{- include "contentRender" ( dict "value" .Values.config.defaultReceivers "context" . ) | nindent 8 }}
+        {{- if .Values.config.defaultReceivers -}}
+        {{- include "ContentRender" ( dict "value" .Values.config.defaultReceivers "context" . ) | nindent 8 }}
+        {{- end -}}

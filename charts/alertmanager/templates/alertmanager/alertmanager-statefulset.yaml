@@ -47,7 +47,7 @@ spec:
       annotations:
         checksum/config: {{ include "alertmanager.configChecksum" . }}
         {{- if .Values.alertmanager.podAnnotations }}
-        {{- include "contentRender" ( dict "value" .Values.alertmanager.podAnnotations "context" . ) | nindent 8 }}
+        {{- include "ContentRender" ( dict "value" .Values.alertmanager.podAnnotations "context" . ) | nindent 8 }}
         {{- end }}
     spec:
       serviceAccountName: {{ .Values.alertmanager.serviceAccount.name | default (include "alertmanager.serviceAccountName" . ) }}
@@ -76,7 +76,7 @@ spec:
         {{ toYaml .Values.alertmanager.extraContainers | nindent 8 }}
         {{- end }}
         - name: alertmanager
-          {{- include "image" .Values.global.image.cortex | nindent 10 }}
+          {{- include "Image" .Values.global.image.cortex | nindent 10 }}
           args:
             - "-target=alertmanager"
             - "-config.file=/etc/alertmanager/alertmanager.yaml"

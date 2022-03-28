@@ -1,6 +1,9 @@
 dependencies:
+- name: common
+  repository: http://127.0.0.1:8080/
+  version: 0.1.0
 - name: minio
   repository: https://helm.min.io/
   version: 8.0.9
-digest: sha256:87380dcd409a28ba7ece02fff63993a66077cba05350dbae0b60b3dd410d04df
-generated: "2022-03-10T15:15:40.0875+08:00"
+digest: sha256:0d699f2f828fce3a262cf832a97b47c5b7ba05db63cdd74d6e1ff4ec03dba11c
+generated: "2022-03-28T18:14:56.283184+08:00"
