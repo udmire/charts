@@ -1,0 +1,14 @@
+{{- if and (gt (int .Values.read.replicas) 1) (.Values.read.podDisruptionBudget) }}
+apiVersion: {{ include "loki.pdbVersion" . }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "loki.readFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "loki.readLabels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "loki.readSelectorLabels" . | nindent 6 }}
+  {{- toYaml .Values.read.podDisruptionBudget | nindent 2 }}
+{{- end }}
