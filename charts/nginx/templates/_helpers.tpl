@@ -86,13 +86,7 @@ Get volume of config secret of configMap
 - name: server-block-paths
   configMap:
     name: {{ template "nginx.fullname" . }}-config
-    items:
-      - key: server-blocks-paths.conf
-        path: server-blocks-paths.conf
-- name: server-block
+- name: server-blocks
   configMap:
-    name: {{ template "nginx.fullname" . }}-config
-    items:
-      - key: server-block.conf
-        path: server-block.conf
+    name: {{ template "nginx.fullname" . }}-config-blocks
 {{- end -}}

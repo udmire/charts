@@ -15,18 +15,18 @@ config:
     httpListenPorts: 
       - 80
     metricPort: 9113
-  serverBlock: |-
-    server {
-    {{- with (index .Values.config.server.httpListenPorts 0) }}
-    listen {{ . }};
-    {{- end }}
-    
-    # nginx status
-    location /status {
-      stub_status;
-    }
-
-    }
+  serverBlocks: 
+    name: |
+      server {
+      {{- with (index .Values.config.server.httpListenPorts 0) }}
+      listen {{ . }};
+      {{- end }}
+      
+      # nginx status
+      location /status {
+        stub_status;
+      }
+      } 
 
 serviceAccount:
   # Specifies whether a service account should be created

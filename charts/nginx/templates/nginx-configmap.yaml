@@ -9,6 +9,18 @@ data:
   server-blocks-paths.conf: |-
     include  "/opt/bitnami/nginx/conf/server_blocks/ldap/*.conf";
     include  "/opt/bitnami/nginx/conf/server_blocks/common/*.conf";
-  server-block.conf: |-
-    {{- include "ContentRender" ( dict "value" .Values.config.serverBlock "context" . ) | nindent 4 }}
-
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "nginx.fullname" . }}-config-blocks
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "nginx.labels" . | nindent 4 }}
+data:
+  {{- if .Values.config.serverBlocks }}
+  {{- range $key, $val := .Values.config.serverBlocks }}
+  {{ $key }}.conf: |-
+    {{- include "ContentRender" ( dict "value" $val "context" $ ) | nindent 4 }}
+  {{ end -}}
+  {{- end }}

@@ -48,7 +48,7 @@ spec:
             {{- end }}
             - name: server-block-paths
               mountPath: /opt/bitnami/nginx/conf/server_blocks
-            - name: server-block
+            - name: server-blocks
               mountPath: /opt/bitnami/nginx/conf/server_blocks/common
           ports:
             {{- with .Values.config.server.httpListenPorts  }}
