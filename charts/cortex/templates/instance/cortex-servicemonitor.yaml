@@ -1,0 +1,42 @@
+{{- if .Values.instance.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "cortex.instanceFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "cortex.instanceLabels" . | nindent 4 }}
+    {{- if .Values.instance.serviceMonitor.additionalLabels }}
+{{ toYaml .Values.instance.serviceMonitor.additionalLabels | indent 4 }}
+    {{- end }}
+  {{- if .Values.instance.serviceMonitor.annotations }}
+  annotations:
+{{ toYaml .Values.instance.serviceMonitor.annotations | indent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "cortex.instanceSelectorLabels" . | nindent 6 }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace | quote }}
+  endpoints:
+  - port: http-metrics
+    {{- if .Values.instance.serviceMonitor.interval }}
+    interval: {{ .Values.instance.serviceMonitor.interval }}
+    {{- end }}
+    {{- if .Values.instance.serviceMonitor.scrapeTimeout }}
+    scrapeTimeout: {{ .Values.instance.serviceMonitor.scrapeTimeout }}
+    {{- end }}
+    {{- if .Values.instance.serviceMonitor.relabelings }}
+    relabelings:
+    {{- toYaml .Values.instance.serviceMonitor.relabelings | nindent 4 }}
+    {{- end }}
+    {{- if .Values.instance.serviceMonitor.metricRelabelings }}
+    metricRelabelings:
+    {{- toYaml .Values.instance.serviceMonitor.metricRelabelings | nindent 4 }}
+    {{- end }}
+    {{- with .Values.instance.serviceMonitor.extraEndpointSpec }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}

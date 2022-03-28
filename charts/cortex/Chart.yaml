@@ -6,6 +6,9 @@ appVersion: 1.16.0
 home: https://cortexmetrics.io/
 kubeVersion: ^1.19.0-0
 dependencies:
+  - name: common
+    version: 0.1.0
+    repository: http://127.0.0.1:8080/
   - name: memcached
     alias: memcached-frontend
     version: 0.1.0
