@@ -28,7 +28,7 @@ spec:
         checksum/datasource: {{ include "grafana.datasourceChecksum" . }}
         checksum/dashboard: {{ include "grafana.dashboardChecksum" . }}
         {{- if .Values.grafana.podAnnotations }}
-        {{- include "contentRender" ( dict "value" .Values.grafana.podAnnotations "context" . ) | nindent 8 }}
+        {{- include "ContentRender" ( dict "value" .Values.grafana.podAnnotations "context" . ) | nindent 8 }}
         {{- end }}
     spec:
       serviceAccountName: {{ .Values.grafana.serviceAccount.name | default (include "grafana.serviceAccountName" . ) }}
@@ -42,7 +42,7 @@ spec:
         {{- toYaml .Values.grafana.initContainers | nindent 8 }}
       containers:
         - name: grafana
-          {{- include "image" .Values.global.image.grafana | nindent 10 }}
+          {{- include "Image" .Values.global.image.grafana | nindent 10 }}
           args:
             - "-config=/etc/grafana/custom.ini"
           {{- range $key, $value := .Values.grafana.extraArgs }}

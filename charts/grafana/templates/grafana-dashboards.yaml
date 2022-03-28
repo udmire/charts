@@ -10,4 +10,4 @@ data:
   default-dashboards.yaml: |-
     apiVersion: 1
     providers:
-      {{- include "contentRender" ( dict "value" .Values.config.dashboards "context" . ) | nindent 6 }}
+      {{- include "ContentRender" ( dict "value" .Values.config.dashboards "context" . ) | nindent 6 }}

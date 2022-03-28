@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "memcached.labels" . | nindent 4 }}
   annotations:
-    {{- include "contentRender" ( dict "value" .Values.annotations "context" . ) | nindent 4 }}
+    {{- include "ContentRender" ( dict "value" .Values.annotations "context" . ) | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicas }}
@@ -27,10 +27,10 @@ spec:
         {{- end }}
       annotations:
         {{- if .Values.podAnnotations }}
-        {{- include "contentRender" ( dict "value" .Values.podAnnotations "context" . ) | nindent 8 }}
+        {{- include "ContentRender" ( dict "value" .Values.podAnnotations "context" . ) | nindent 8 }}
         {{- end }}
         {{- if and .Values.metrics.enabled .Values.metrics.podAnnotations }}
-        {{- include "contentRender" ( dict "value" .Values.metrics.podAnnotations "context" . ) | nindent 8 }}
+        {{- include "ContentRender" ( dict "value" .Values.metrics.podAnnotations "context" . ) | nindent 8 }}
         {{- end }}
     spec:
       {{- if .Values.priorityClassName }}
@@ -57,7 +57,7 @@ spec:
         {{- toYaml .Values.extraContainers | nindent 8 }}
         {{- end }}
         - name: memcached
-          {{- include "image" .Values.global.image.memcached | nindent 10 }}
+          {{- include "Image" .Values.global.image.memcached | nindent 10 }}
           volumeMounts:
             {{- if .Values.extraVolumeMounts }}
             {{- toYaml .Values.extraVolumeMounts | nindent 12}}
@@ -89,7 +89,7 @@ spec:
           {{- end }}
         {{- if .Values.metrics.enabled }}
         - name: metrics
-          {{- include "image" .Values.global.image.exporter | nindent 10 }}
+          {{- include "Image" .Values.global.image.exporter | nindent 10 }}
           ports:
             - name: http-metrics
               containerPort: {{ .Values.config.server.metricPort }}

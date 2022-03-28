@@ -27,7 +27,7 @@ spec:
       annotations:
         checksum/config: {{ include "nginx.configChecksum" . }}
         {{- if .Values.nginx.podAnnotations }}
-        {{- include "contentRender" ( dict "value" .Values.nginx.podAnnotations "context" . ) | nindent 8 }}
+        {{- include "ContentRender" ( dict "value" .Values.nginx.podAnnotations "context" . ) | nindent 8 }}
         {{- end }}
     spec:
       serviceAccountName: {{ .Values.nginx.serviceAccount.name | default (include "nginx.serviceAccountName" . ) }}
@@ -41,7 +41,7 @@ spec:
         {{- toYaml .Values.nginx.initContainers | nindent 8 }}
       containers:
         - name: nginx
-          {{- include "image" .Values.global.image.nginx | nindent 10 }}
+          {{- include "Image" .Values.global.image.nginx | nindent 10 }}
           volumeMounts:
             {{- if .Values.nginx.extraVolumeMounts }}
             {{- toYaml .Values.nginx.extraVolumeMounts | nindent 12}}
@@ -72,11 +72,11 @@ spec:
             - name: BITNAMI_DEBUG
               value: "false"
             {{- if .Values.nginx.env }}
-            {{- include "contentRender" ( dict "value" .Values.nginx.env "context" . ) | nindent 12 }}
+            {{- include "ContentRender" ( dict "value" .Values.nginx.env "context" . ) | nindent 12 }}
             {{- end }}
         {{- if .Values.nginx.metrics.enabled }}
         - name: metrics
-          {{- include "image" .Values.global.image.nginxExporter | nindent 10 }}
+          {{- include "Image" .Values.global.image.nginxExporter | nindent 10 }}
           command: ['/usr/bin/exporter', '-nginx.scrape-uri', 'http://127.0.0.1:8080/status']
           ports:
             - name: http-metrics

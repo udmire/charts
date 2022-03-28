@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "synthetic.agentFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "synthetic.agentLabels" . | nindent 4 }}
+    {{- with .Values.agent.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- toYaml .Values.agent.service.annotations | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    {{- with .Values.config.server.httpListenPorts  }}
+    {{- range $i, $val := . }}
+    - port: {{ $val }}
+      protocol: TCP
+      name: http-{{ $i }}
+      targetPort: http-{{ $i }}
+    {{ end -}}
+    {{- end }}
+  selector:
+    {{- include "synthetic.agentSelectorLabels" . | nindent 4 }}

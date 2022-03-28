@@ -1,0 +1,43 @@
+
+{{- if .Values.agent.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "synthetic.agentFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "synthetic.agentLabels" . | nindent 4 }}
+    {{- if .Values.agent.serviceMonitor.additionalLabels }}
+{{ toYaml .Values.agent.serviceMonitor.additionalLabels | indent 4 }}
+    {{- end }}
+  {{- if .Values.agent.serviceMonitor.annotations }}
+  annotations:
+{{ toYaml .Values.agent.serviceMonitor.annotations | indent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "synthetic.agentSelectorLabels" . | nindent 6 }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace | quote }}
+  endpoints:
+  - port: http-metrics
+    {{- if .Values.agent.serviceMonitor.interval }}
+    interval: {{ .Values.agent.serviceMonitor.interval }}
+    {{- end }}
+    {{- if .Values.agent.serviceMonitor.scrapeTimeout }}
+    scrapeTimeout: {{ .Values.agent.serviceMonitor.scrapeTimeout }}
+    {{- end }}
+    {{- if .Values.agent.serviceMonitor.relabelings }}
+    relabelings:
+    {{- toYaml .Values.agent.serviceMonitor.relabelings | nindent 4 }}
+    {{- end }}
+    {{- if .Values.agent.serviceMonitor.metricRelabelings }}
+    metricRelabelings:
+    {{- toYaml .Values.agent.serviceMonitor.metricRelabelings | nindent 4 }}
+    {{- end }}
+    {{- with .Values.agent.serviceMonitor.extraEndpointSpec }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}

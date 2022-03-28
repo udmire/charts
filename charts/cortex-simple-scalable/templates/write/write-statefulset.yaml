@@ -18,7 +18,7 @@ spec:
   updateStrategy:
     {{- toYaml .Values.write.statefulStrategy | nindent 4 }}          
   podManagementPolicy: "{{ .Values.write.statefulSet.podManagementPolicy }}"
-  serviceName: {{ template "cortex.fullname" . }}-write-headless
+  serviceName: {{ template "cortex.writeFullname" . }}-headless
   {{- if .Values.write.persistentVolume.enabled }}
   volumeClaimTemplates:
     - metadata:

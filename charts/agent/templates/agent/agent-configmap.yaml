@@ -167,12 +167,12 @@ data:
       global:
         scrape_interval: 1m
         remote_write: 
-          {{- include "contentRender" ( dict "value" .Values.config.metrics.remoteWrites "context" . ) | nindent 10 }}
+          {{- include "ContentRender" ( dict "value" .Values.config.metrics.remoteWrites "context" . ) | nindent 10 }}
       wal_directory: /var/lib/agent/data
     logs:
       configs:
         - clients:
-            {{- include "contentRender" ( dict "value" .Values.config.logs.clients "context" . ) | nindent 12 }}
+            {{- include "ContentRender" ( dict "value" .Values.config.logs.clients "context" . ) | nindent 12 }}
           name: default
           scrape_configs:
             - job_name: kubernetes-pods-name
@@ -236,7 +236,7 @@ data:
                 http: null
             zipkin: null
           remote_write:
-            {{- include "contentRender" ( dict "value" .Values.config.traces.remoteWrites "context" . ) | nindent 12 }}
+            {{- include "ContentRender" ( dict "value" .Values.config.traces.remoteWrites "context" . ) | nindent 12 }}
           scrape_configs:
             - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
               job_name: kubernetes-pods

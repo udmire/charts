@@ -48,7 +48,7 @@ spec:
       annotations:
         checksum/config: {{ include "tempo.configChecksum" . }}
         {{- if .Values.compactor.podAnnotations }}
-        {{- include "contentRender" ( dict "value" .Values.compactor.podAnnotations "context" . ) | nindent 8 }}
+        {{- include "ContentRender" ( dict "value" .Values.compactor.podAnnotations "context" . ) | nindent 8 }}
         {{- end }}
     spec:
       serviceAccountName: {{ .Values.compactor.serviceAccount.name | default (include "tempo.serviceAccountName" . ) }}
@@ -80,7 +80,7 @@ spec:
         {{ toYaml .Values.compactor.extraContainers | nindent 8 }}
         {{- end }}
         - name: compactor
-          {{- include "image" .Values.global.image.tempo | nindent 10 }}
+          {{- include "Image" .Values.global.image.tempo | nindent 10 }}
           args:
             - "-target=compactor"
             - "-config.file=/etc/tempo/tempo.yaml"

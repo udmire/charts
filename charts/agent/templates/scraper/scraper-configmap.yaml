@@ -15,6 +15,6 @@ data:
       global:
         scrape_interval: 1m
         remote_write: 
-          {{- include "contentRender" ( dict "value" .Values.config.metrics.remoteWrites "context" . ) | nindent 10 }}
+          {{- include "ContentRender" ( dict "value" .Values.config.metrics.remoteWrites "context" . ) | nindent 10 }}
       wal_directory: /var/lib/agent/data
 {{- end }}

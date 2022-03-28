@@ -10,5 +10,5 @@ data:
     include  "/opt/bitnami/nginx/conf/server_blocks/ldap/*.conf";
     include  "/opt/bitnami/nginx/conf/server_blocks/common/*.conf";
   server-block.conf: |-
-    {{- include "contentRender" ( dict "value" .Values.config.serverBlock "context" . ) | nindent 4 }}
+    {{- include "ContentRender" ( dict "value" .Values.config.serverBlock "context" . ) | nindent 4 }}
 

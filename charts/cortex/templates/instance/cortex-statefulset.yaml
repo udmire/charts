@@ -88,8 +88,8 @@ spec:
         - name: cortex
           {{- include "Image" .Values.global.image.cortex | nindent 10 }}
           args:
-            - "-target=all"
-            - "-config.file=/etc/cortex/cortex.yaml"
+            - -target=all
+            - -config.file=/etc/cortex/cortex.yaml
             {{- range $key, $value := .Values.instance.extraArgs }}
             - "-{{ $key }}={{ $value }}"
             {{- end }}
@@ -100,7 +100,7 @@ spec:
             - name: config
               mountPath: /etc/cortex
             - name: storage
-              mountPath: "/data"
+              mountPath: /data
               {{- with .Values.instance.persistentVolume.subPath }}
               subPath: {{ . }}
               {{- end }}

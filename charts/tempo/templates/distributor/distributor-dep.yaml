@@ -29,7 +29,7 @@ spec:
       annotations:
         checksum/config: {{ include "tempo.configChecksum" . }}
         {{- if .Values.distributor.podAnnotations }}
-        {{- include "contentRender" ( dict "value" .Values.distributor.podAnnotations "context" . ) | nindent 8 }}
+        {{- include "ContentRender" ( dict "value" .Values.distributor.podAnnotations "context" . ) | nindent 8 }}
         {{- end }}
     spec:
       serviceAccountName: {{ .Values.distributor.serviceAccount.name | default (include "tempo.serviceAccountName" . ) }}
@@ -43,7 +43,7 @@ spec:
         {{- toYaml .Values.distributor.initContainers | nindent 8 }}
       containers:
         - name: distributor
-          {{- include "image" .Values.global.image.tempo | nindent 10 }}
+          {{- include "Image" .Values.global.image.tempo | nindent 10 }}
           args:
             - "-target=distributor"
             - "-config.file=/etc/tempo/tempo.yaml"

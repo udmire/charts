@@ -53,7 +53,7 @@ spec:
       annotations:
         checksum/config: {{ include "tempo.configChecksum" . }}
         {{- if .Values.ingester.podAnnotations }}
-        {{- include "contentRender" ( dict "value" .Values.ingester.podAnnotations "context" . ) | nindent 8 }}
+        {{- include "ContentRender" ( dict "value" .Values.ingester.podAnnotations "context" . ) | nindent 8 }}
         {{- end }}
     spec:
       serviceAccountName: {{ .Values.ingester.serviceAccount.name | default (include "tempo.serviceAccountName" . ) }}
@@ -89,7 +89,7 @@ spec:
         {{- toYaml .Values.ingester.extraContainers | nindent 8 }}
         {{- end }}
         - name: ingester
-          {{- include "image" .Values.global.image.tempo | nindent 10 }}
+          {{- include "Image" .Values.global.image.tempo | nindent 10 }}
           args:
             - "-target=ingester"
             - "-config.file=/etc/tempo/tempo.yaml"

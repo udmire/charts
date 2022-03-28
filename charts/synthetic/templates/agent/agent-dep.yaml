@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "synthetic.agentFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "synthetic.agentLabels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.agent.annotations | nindent 4 }}
+spec:
+  {{- if not .Values.agent.autoscaling.enabled }}
+  replicas: {{ .Values.agent.replicas }}
+  {{- end }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      {{- include "synthetic.agentSelectorLabels" . | nindent 6 }}
+  strategy:
+    {{- toYaml .Values.agent.strategy | nindent 4 }}
+  template:
+    metadata:
+      labels:
+        {{- include "synthetic.agentLabels" . | nindent 8 }}
+        {{- with .Values.agent.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        {{- if .Values.agent.podAnnotations }}
+        {{- include "ContentRender" ( dict "value" .Values.agent.podAnnotations "context" . ) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.agent.serviceAccount.name | default (include "synthetic.serviceAccountName" . ) }}
+      {{- if .Values.agent.priorityClassName }}
+      priorityClassName: {{ .Values.agent.priorityClassName }}
+      {{- end }}
+      {{- if .Values.agent.securityContext.enabled }}
+      securityContext: {{- omit .Values.agent.securityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- toYaml .Values.agent.initContainers | nindent 8 }}
+      containers:
+        - name: agent
+          {{- include "Image" .Values.global.image.synthetic | nindent 10 }}
+          command:
+            - sh
+            - -c
+          args:
+            - /usr/local/bin/synthetic-monitoring-agent --api-server-address=${API_SERVER} --api-token=${API_TOKEN} --verbose=true
+          volumeMounts:
+            {{- if .Values.agent.extraVolumeMounts }}
+            {{- toYaml .Values.agent.extraVolumeMounts | nindent 12}}
+            {{- end }}
+          ports:
+            - containerPort: 4050
+              name: http-metrics
+          startupProbe:
+            {{- toYaml .Values.agent.startupProbe | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.agent.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.agent.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.agent.resources | nindent 12 }}
+          {{- if .Values.agent.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.agent.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          env:
+            - name: API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: api-token
+                  name: sm-agent-1
+            - name: API_SERVER
+              value: {{- include "ContentRender" ( dict "value" .Values.config.apiServer "context" . ) }}
+            {{- if .Values.agent.env }}
+            {{- include "ContentRender" ( dict "value" .Values.agent.env "context" . ) | nindent 12 }}
+            {{- end }}
+      nodeSelector:
+        {{- toYaml .Values.agent.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.agent.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.agent.tolerations | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.agent.terminationGracePeriodSeconds }}
+      volumes:
+        {{- if .Values.agent.extraVolumes }}
+        {{- toYaml .Values.agent.extraVolumes | nindent 8}}
+        {{- end }}
+
+
+
+      
+      

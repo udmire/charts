@@ -92,7 +92,7 @@ data:
         {{- if .Values.memcached.enabled }}
         cache: memcached
         memcached:
-          addresses: dns+{{ template "tempo.fullname" . }}-memcached.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:11211
+          addresses: dns+{{ template "tempo.memcached" . }}.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:11211
         {{- end }}
         {{ if .Values.global.storage.backend }}
         backend: {{.Values.global.storage.backend}}
@@ -116,7 +116,7 @@ data:
         backend: s3
         s3:
           insecure: true
-          endpoint: {{ template "tempo.fullname" . }}-minio.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:9000
+          endpoint: {{ template "tempo.minio" . }}.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:9000
           {{- with (index .Values.minio.buckets 0) }}
           bucket: {{ .name }}
           {{- end }}

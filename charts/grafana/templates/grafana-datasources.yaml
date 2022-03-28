@@ -9,4 +9,4 @@ data:
   datasources.yaml: |-
     apiVersion: 1
     datasources:
-      {{- include "contentRender" ( dict "value" .Values.config.datasources "context" . ) | nindent 6 }}
+      {{- include "ContentRender" ( dict "value" .Values.config.datasources "context" . ) | nindent 6 }}

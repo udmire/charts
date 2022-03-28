@@ -23,6 +23,9 @@ version: 0.1.0
 # It is recommended to use it with quotes.
 appVersion: "1.16.0"
 dependencies:
+  - name: common
+    version: 0.1.0
+    repository: http://charts.udmire.cn/
   - name: memcached
     alias: memcached
     version: 0.1.0
