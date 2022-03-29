@@ -103,10 +103,10 @@ data:
         {{- if eq .Values.global.storage.backend "s3"}}
         s3:
           insecure: {{ default true .Values.global.storage.s3.insecure }}
-          endpoint: {{ .Values.global.storage.s3.endpoint }}
-          access_key: {{ .Values.global.storage.s3.accessKey }}
-          secret_key: {{ .Values.global.storage.s3.secretKey }}
-          bucket: {{ .Values.global.storage.buckets.traceData }}
+          endpoint: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.endpoint "context" . ) }}
+          bucket: {{ include "ContentRender" ( dict "value" .Values.global.storage.buckets.traceData "context" . ) }}
+          access_key: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.accessKey "context" . ) }}
+          secret_key: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.secretKey "context" . ) }}
         {{- end }}
         {{- if eq .Values.global.storage.backend "azure"}}
         azure:

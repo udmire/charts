@@ -116,10 +116,10 @@ data:
       {{- end }}
       {{- if eq .Values.global.storage.backend "s3"}}
       aws:
-        endpoint: {{ .Values.global.storage.s3.endpoint }}
-        bucketnames: {{ .Values.global.storage.buckets.logData }}
-        access_key_id: {{ .Values.global.storage.s3.accessKey }}
-        secret_access_key: {{ .Values.global.storage.s3.secretKey }}
+        endpoint: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.endpoint "context" . ) }}
+        bucketnames: {{ include "ContentRender" ( dict "value" .Values.global.storage.buckets.logData "context" . ) }}
+        access_key_id: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.accessKey "context" . ) }}
+        secret_access_key: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.secretKey "context" . ) }}
         insecure: {{ default true .Values.global.storage.s3.insecure }}
         s3forcepathstyle: true
       {{- end }}
@@ -175,10 +175,10 @@ data:
         {{- end }}
         {{- if eq .Values.global.storage.backend "s3"}}
         s3:
-          endpoint: {{ .Values.global.storage.s3.endpoint }}
-          bucketnames: {{ .Values.global.storage.buckets.logData }}
-          access_key_id: {{ .Values.global.storage.s3.accessKey }}
-          secret_access_key: {{ .Values.global.storage.s3.secretKey }}
+          endpoint: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.endpoint "context" . ) }}
+          bucketnames: {{ include "ContentRender" ( dict "value" .Values.global.storage.buckets.logRule "context" . ) }}
+          access_key_id: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.accessKey "context" . ) }}
+          secret_access_key: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.secretKey "context" . ) }}
           insecure: {{ default true .Values.global.storage.s3.insecure }}
           s3forcepathstyle: true
         {{- end }}
