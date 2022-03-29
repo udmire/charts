@@ -89,7 +89,7 @@ spec:
           {{- end }}
         {{- if .Values.metrics.enabled }}
         - name: metrics
-          {{- include "Image" .Values.global.image.exporter | nindent 10 }}
+          {{- include "Image" .Values.global.image.memcachedExporter | nindent 10 }}
           ports:
             - name: http-metrics
               containerPort: {{ .Values.config.server.metricPort }}

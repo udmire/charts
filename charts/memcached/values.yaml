@@ -9,7 +9,7 @@ global:
       repository: bitnami/memcached
       tag: 1.6.14-debian-10-r16
       pullPolicy: IfNotPresent
-    exporter:
+    memcachedExporter:
       registry: ""
       repository: bitnami/memcached-exporter
       tag: 0.9.0-debian-10-r312
