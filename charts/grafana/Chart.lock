@@ -1,9 +1,9 @@
 dependencies:
 - name: common
-  repository: http://127.0.0.1:8080/
+  repository: http://charts.udmire.cn/
   version: 0.1.0
 - name: redis
   repository: https://charts.bitnami.com/bitnami
   version: 16.5.2
-digest: sha256:480eeff1dd7845d463b8eead586975331cbac665060fa0b237079bb024f6b185
-generated: "2022-03-28T18:26:16.478135+08:00"
+digest: sha256:d31a08e021d59e30231ac1be5821c7d751c8c3029f1c639b1e6eb57b8276bcc1
+generated: "2022-03-29T10:28:13.379082+08:00"

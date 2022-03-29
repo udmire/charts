@@ -1,6 +1,6 @@
 dependencies:
 - name: common
-  repository: http://127.0.0.1:8080/
+  repository: http://charts.udmire.cn/
   version: 0.1.0
-digest: sha256:d35a769f9fcdabc5c98b34da42f2bb21b69f4334bab2038a804fcba6ea1e67cf
-generated: "2022-03-28T21:32:47.787738+08:00"
+digest: sha256:ad483c6224f550ca6a24c8d1056d59b31fb0b77fad8a57f91f0f66d1d7de68dc
+generated: "2022-03-29T10:29:13.648148+08:00"

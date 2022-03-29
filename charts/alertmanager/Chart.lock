@@ -1,9 +1,9 @@
 dependencies:
 - name: common
-  repository: http://127.0.0.1:8080/
+  repository: http://charts.udmire.cn/
   version: 0.1.0
 - name: minio
   repository: https://helm.min.io/
   version: 8.0.9
-digest: sha256:0d699f2f828fce3a262cf832a97b47c5b7ba05db63cdd74d6e1ff4ec03dba11c
-generated: "2022-03-28T18:14:56.283184+08:00"
+digest: sha256:14b286b0fb64769723939f67b099783413ff0faf968db635d77f4b7661c10038
+generated: "2022-03-29T10:27:16.601716+08:00"
