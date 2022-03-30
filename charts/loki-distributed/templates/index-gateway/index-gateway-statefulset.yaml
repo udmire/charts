@@ -93,7 +93,7 @@ spec:
             - name: config
               mountPath: /etc/loki/
             - name: storage
-              mountPath: /data
+              mountPath: /loki
               {{- with .Values.index_gateway.persistentVolume.subPath }}
               subPath: {{ . }}
               {{- end }}

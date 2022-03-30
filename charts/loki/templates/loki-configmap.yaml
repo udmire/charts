@@ -15,7 +15,7 @@ data:
       grpc_server_max_send_msg_size: 104857600
       grpc_server_max_concurrent_streams: 100000
     compactor:
-      working_directory: /data/compactor
+      working_directory: /loki/compactor
       compaction_interval: 30m
       retention_enabled: true
       compactor_ring:
@@ -61,7 +61,7 @@ data:
       max_chunk_age: 1h
       wal:
         enabled: true
-        dir: /data/wal
+        dir: /loki/wal
         replay_memory_ceiling: 10GB
       max_transfer_retries: 0
       lifecycler:
@@ -74,7 +74,7 @@ data:
         join_after: 0s
         final_sleep: 0s
         heartbeat_period: 5s
-        tokens_file_path: /data/tokens
+        tokens_file_path: /loki/tokens
     limits_config:
       reject_old_samples: true
       reject_old_samples_max_age: 168h
@@ -106,8 +106,8 @@ data:
           server_address: dns:///{{ template "loki.fullname" . }}-index-gateway.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.server.grpcListenPort }}
           grpc_client_config:
             grpc_compression: snappy
-        active_index_directory: /data/index
-        cache_location: /data/cache
+        active_index_directory: /loki/index
+        cache_location: /loki/cache
       {{- if .Values.global.storage.backend }}
         shared_store: {{.Values.global.storage.backend}}
       {{- if eq .Values.global.storage.backend "gcs"}}
@@ -141,7 +141,7 @@ data:
       {{- else }}
         shared_store: filesystem
       filesystem:
-        directory: /data/chunks
+        directory: /loki/chunks
       {{- end }}
     querier:
       query_ingesters_within: 2h
@@ -200,7 +200,7 @@ data:
         {{- else }}
         type: local
         local:
-          directory: /data/rules
+          directory: /loki/rules
         {{- end }}
     memberlist:
       abort_if_cluster_join_fails: false
