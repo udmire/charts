@@ -168,11 +168,20 @@ instance:
       path: /ready
       port: http-metrics
 
-  securityContext: {}
+  securityContext: 
+    enabled: true
+    fsGroup: 10001
+    runAsGroup: 10001
+    runAsNonRoot: true
+    runAsUser: 10001
 
   containerSecurityContext:
-    enabled: true
+    enabled: false
     readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+    allowPrivilegeEscalation: false
 
   strategy:
     type: RollingUpdate

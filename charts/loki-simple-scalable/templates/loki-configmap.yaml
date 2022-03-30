@@ -28,7 +28,6 @@ data:
           store: memberlist
           prefix: logs/distributor/
     frontend_worker:
-      scheduler_address: {{ template "loki.fullname" . }}-read-headless.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.server.grpcListenPort }}
       grpc_client_config:
         max_send_msg_size: 104857600
         grpc_compression: snappy
@@ -37,7 +36,6 @@ data:
       compress_responses: true
       max_body_size: 104857600
       query_stats_enabled: true
-      scheduler_address: {{ template "loki.fullname" . }}-read-headless.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.server.grpcListenPort }}
       tail_proxy_url: 'http://{{ template "loki.fullname" . }}-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.server.httpListenPort }}'
       grpc_client_config:
         grpc_compression: snappy
@@ -83,7 +81,15 @@ data:
       configs:
       - from: 2022-03-07
         store: boltdb-shipper
+        {{- if .Values.global.storage.backend }}
+        {{- if eq .Values.global.storage.backend "s3"}}
+        object_store: aws
+        {{- end }}
+        {{- else if .Values.minio.enabled }}
+        object_store: aws
+        {{- else }}
         object_store: filesystem
+        {{- end }}
         schema: v11
         index:
           prefix: loki_index_
@@ -103,17 +109,12 @@ data:
     storage_config:
       boltdb_shipper:
         index_gateway_client:
-          server_address: dns:///{{ template "loki.fullname" . }}-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.server.grpcListenPort }}
           grpc_client_config:
             grpc_compression: snappy
         active_index_directory: /loki/index
         cache_location: /loki/cache
       {{- if .Values.global.storage.backend }}
         shared_store: {{.Values.global.storage.backend}}
-      {{- if eq .Values.global.storage.backend "gcs"}}
-      gcs:
-        {{- toYaml .Values.global.storage.gcs | nindent 4}}
-      {{- end }}
       {{- if eq .Values.global.storage.backend "s3"}}
       aws:
         endpoint: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.endpoint "context" . ) }}
@@ -122,10 +123,6 @@ data:
         secret_access_key: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.secretKey "context" . ) }}
         insecure: {{ default true .Values.global.storage.s3.insecure }}
         s3forcepathstyle: true
-      {{- end }}
-      {{- if eq .Values.global.storage.backend "azure"}}
-      azure:
-        {{- toYaml .Values.global.storage.azure | nindent 4}}
       {{- end }}
       {{- else if .Values.minio.enabled }}
         shared_store: s3
@@ -169,10 +166,6 @@ data:
       storage:
         {{- if .Values.global.storage.backend }}
         type: {{.Values.global.storage.backend}}
-        {{- if eq .Values.global.storage.backend "gcs"}}
-        gcs:
-          {{- toYaml .Values.global.storage.gcs | nindent 4}}
-        {{- end }}
         {{- if eq .Values.global.storage.backend "s3"}}
         s3:
           endpoint: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.endpoint "context" . ) }}
@@ -181,10 +174,6 @@ data:
           secret_access_key: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.secretKey "context" . ) }}
           insecure: {{ default true .Values.global.storage.s3.insecure }}
           s3forcepathstyle: true
-        {{- end }}
-        {{- if eq .Values.global.storage.backend "azure"}}
-        azure:
-          {{- toYaml .Values.global.storage.azure | nindent 4}}
         {{- end }}
         {{- else if .Values.minio.enabled }}
         type: s3

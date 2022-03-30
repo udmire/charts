@@ -135,10 +135,20 @@ compactor:
       path: /ready
       port: http-metrics
 
-  securityContext: {}
-  containerSecurityContext:
+  securityContext: 
     enabled: true
+    fsGroup: 10001
+    runAsGroup: 10001
+    runAsNonRoot: true
+    runAsUser: 10001
+
+  containerSecurityContext:
+    enabled: false
     readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+    allowPrivilegeEscalation: false
 
   strategy:
     type: RollingUpdate
@@ -230,11 +240,20 @@ distributor:
       path: /ready
       port: http-metrics
 
-  securityContext: {}
+  securityContext: 
+    enabled: true
+    fsGroup: 10001
+    runAsGroup: 10001
+    runAsNonRoot: true
+    runAsUser: 10001
 
   containerSecurityContext:
-    enabled: true
+    enabled: false
     readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+    allowPrivilegeEscalation: false
 
   strategy:
     type: RollingUpdate
@@ -384,11 +403,20 @@ ingester:
       path: /ready
       port: http-metrics
 
-  securityContext: {}
+  securityContext: 
+    enabled: true
+    fsGroup: 10001
+    runAsGroup: 10001
+    runAsNonRoot: true
+    runAsUser: 10001
 
   containerSecurityContext:
-    enabled: true
+    enabled: false
     readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+    allowPrivilegeEscalation: false
 
   strategy:
     type: RollingUpdate
@@ -463,11 +491,20 @@ ruler:
       path: /ready
       port: http-metrics
 
-  securityContext: {}
+  securityContext: 
+    enabled: true
+    fsGroup: 10001
+    runAsGroup: 10001
+    runAsNonRoot: true
+    runAsUser: 10001
 
   containerSecurityContext:
-    enabled: true
+    enabled: false
     readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+    allowPrivilegeEscalation: false
 
   strategy:
     type: RollingUpdate
@@ -562,11 +599,20 @@ querier:
       path: /ready
       port: http-metrics
 
-  securityContext: {}
+  securityContext: 
+    enabled: true
+    fsGroup: 10001
+    runAsGroup: 10001
+    runAsNonRoot: true
+    runAsUser: 10001
 
   containerSecurityContext:
-    enabled: true
+    enabled: false
     readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+    allowPrivilegeEscalation: false
 
   strategy:
     type: RollingUpdate
@@ -662,10 +708,20 @@ query_frontend:
       path: /ready
       port: http-metrics
 
-  securityContext: {}
-  containerSecurityContext:
+  securityContext: 
     enabled: true
+    fsGroup: 10001
+    runAsGroup: 10001
+    runAsNonRoot: true
+    runAsUser: 10001
+
+  containerSecurityContext:
+    enabled: false
     readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+    allowPrivilegeEscalation: false
 
   strategy:
     type: RollingUpdate
@@ -751,10 +807,20 @@ query_scheduler:
       path: /ready
       port: http-metrics
 
-  securityContext: {}
-  containerSecurityContext:
+  securityContext: 
     enabled: true
+    fsGroup: 10001
+    runAsGroup: 10001
+    runAsNonRoot: true
+    runAsUser: 10001
+
+  containerSecurityContext:
+    enabled: false
     readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+    allowPrivilegeEscalation: false
 
   strategy:
     type: RollingUpdate
@@ -891,10 +957,20 @@ index_gateway:
       path: /ready
       port: http-metrics
 
-  securityContext: {}
-  containerSecurityContext:
+  securityContext: 
     enabled: true
+    fsGroup: 10001
+    runAsGroup: 10001
+    runAsNonRoot: true
+    runAsUser: 10001
+
+  containerSecurityContext:
+    enabled: false
     readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+    allowPrivilegeEscalation: false
 
   strategy:
     type: RollingUpdate

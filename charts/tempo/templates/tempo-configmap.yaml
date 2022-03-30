@@ -96,10 +96,6 @@ data:
         {{- end }}
         {{ if .Values.global.storage.backend }}
         backend: {{.Values.global.storage.backend}}
-        {{- if eq .Values.global.storage.backend "gcs"}}
-        gcs:
-          {{- toYaml .Values.global.storage.gcs | nindent 6}}
-        {{- end }}
         {{- if eq .Values.global.storage.backend "s3"}}
         s3:
           insecure: {{ default true .Values.global.storage.s3.insecure }}
@@ -107,10 +103,6 @@ data:
           bucket: {{ include "ContentRender" ( dict "value" .Values.global.storage.buckets.traceData "context" . ) }}
           access_key: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.accessKey "context" . ) }}
           secret_key: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.secretKey "context" . ) }}
-        {{- end }}
-        {{- if eq .Values.global.storage.backend "azure"}}
-        azure:
-          {{- toYaml .Values.global.storage.azure | nindent 6}}
         {{- end }}
         {{- else if .Values.minio.enabled }}
         backend: s3

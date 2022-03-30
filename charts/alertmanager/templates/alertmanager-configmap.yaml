@@ -39,10 +39,6 @@ data:
     alertmanager_storage:
       {{- if .Values.global.storage.backend }}
       backend: {{.Values.global.storage.backend}}
-      {{- if eq .Values.global.storage.backend "gcs"}}
-      gcs:
-        {{- toYaml .Values.global.storage.gcs | nindent 4}}
-      {{- end }}
       {{- if eq .Values.global.storage.backend "s3"}}
       s3:
         endpoint: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.endpoint "context" . ) }}
@@ -52,14 +48,6 @@ data:
         insecure: {{ default true .Values.global.storage.s3.insecure }}
         http:
           insecure_skip_verify: true
-      {{- end }}
-      {{- if eq .Values.global.storage.backend "azure"}}
-      azure:
-        {{- toYaml .Values.global.storage.azure | nindent 4}}
-      {{- end }}
-      {{- if eq .Values.global.storage.backend "swift"}}
-      swift:
-        {{- toYaml .Values.global.storage.swift | nindent 4}}
       {{- end }}
       {{- else if .Values.minio.enabled }}
       backend: s3

@@ -125,8 +125,25 @@ agent:
 
   initContainers: []
   extraContainers: []
-  extraVolumes: []
-  extraVolumeMounts: []
+  extraVolumes: 
+    - name: zoneinfo
+      hostPath:
+        path: /etc/localtime
+    - name: varlog
+      hostPath:
+        path: /var/log
+    - name: docker
+      hostPath:
+        path: /data/kubernetes/docker
+  extraVolumeMounts: 
+    - name: zoneinfo
+      mountPath: /etc/localtime
+      readOnly: true
+    - name: varlog
+      mountPath: /var/log
+    - name: docker
+      mountPath: /data/kubernetes/docker
+    
   extraPorts: []
   env: []
   lifecycle: {}

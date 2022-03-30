@@ -83,7 +83,15 @@ data:
       configs:
       - from: 2022-03-07
         store: boltdb-shipper
+        {{- if .Values.global.storage.backend }}
+        {{- if eq .Values.global.storage.backend "s3"}}
+        object_store: aws
+        {{- end }}
+        {{- else if .Values.minio.enabled }}
+        object_store: aws
+        {{- else }}
         object_store: filesystem
+        {{- end }}
         schema: v11
         index:
           prefix: loki_index_
@@ -110,10 +118,6 @@ data:
         cache_location: /loki/cache
       {{- if .Values.global.storage.backend }}
         shared_store: {{.Values.global.storage.backend}}
-      {{- if eq .Values.global.storage.backend "gcs"}}
-      gcs:
-        {{- toYaml .Values.global.storage.gcs | nindent 4}}
-      {{- end }}
       {{- if eq .Values.global.storage.backend "s3"}}
       aws:
         endpoint: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.endpoint "context" . ) }}
@@ -122,10 +126,6 @@ data:
         secret_access_key: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.secretKey "context" . ) }}
         insecure: {{ default true .Values.global.storage.s3.insecure }}
         s3forcepathstyle: true
-      {{- end }}
-      {{- if eq .Values.global.storage.backend "azure"}}
-      azure:
-        {{- toYaml .Values.global.storage.azure | nindent 4}}
       {{- end }}
       {{- else if .Values.minio.enabled }}
         shared_store: s3
@@ -169,10 +169,6 @@ data:
       storage:
         {{- if .Values.global.storage.backend }}
         type: {{.Values.global.storage.backend}}
-        {{- if eq .Values.global.storage.backend "gcs"}}
-        gcs:
-          {{- toYaml .Values.global.storage.gcs | nindent 4}}
-        {{- end }}
         {{- if eq .Values.global.storage.backend "s3"}}
         s3:
           endpoint: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.endpoint "context" . ) }}
@@ -181,10 +177,6 @@ data:
           secret_access_key: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.secretKey "context" . ) }}
           insecure: {{ default true .Values.global.storage.s3.insecure }}
           s3forcepathstyle: true
-        {{- end }}
-        {{- if eq .Values.global.storage.backend "azure"}}
-        azure:
-          {{- toYaml .Values.global.storage.azure | nindent 4}}
         {{- end }}
         {{- else if .Values.minio.enabled }}
         type: s3
