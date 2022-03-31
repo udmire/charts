@@ -33,6 +33,9 @@ spec:
       {{- if .Values.agent.securityContext.enabled }}
       securityContext: {{- omit .Values.agent.securityContext "enabled" | toYaml | nindent 8 }}
       {{- end }}
+      {{- if .Values.agent.hostNetwork }}
+      hostNetwork: true
+      {{- end }}
       initContainers:
         {{- toYaml .Values.agent.initContainers | nindent 8 }}
       containers:
