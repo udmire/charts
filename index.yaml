@@ -3,13 +3,13 @@ entries:
   agent:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-04-01T01:53:34.238152483Z"
+    created: "2022-04-01T02:05:50.428497334Z"
     dependencies:
     - name: common
       repository: http://charts.udmire.cn/
       version: 0.1.0
     description: A Helm chart for Kubernetes
-    digest: eaba253423048b97b0a1d47682179fc034df9f8feaa4bbc61105740dd879837c
+    digest: 140aeedec675479e6623599e74b9d1b16d292f9ac2cc11c5c24040e0d278582a
     name: agent
     type: application
     urls:
@@ -18,7 +18,7 @@ entries:
   alertmanager:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-04-01T01:53:34.24063398Z"
+    created: "2022-04-01T02:05:50.431656375Z"
     dependencies:
     - name: common
       repository: http://charts.udmire.cn/
@@ -29,7 +29,7 @@ entries:
       repository: https://helm.min.io/
       version: 8.0.9
     description: Alert ability implmentation with cortex alertmanager.
-    digest: 61cc8e4839c260269a64cc05a7bd7c539c73a49c6aeefeae6c5e3f5464572f94
+    digest: 60ca167f6c87264c43964298d9263a876ed37c1d070605f4c4d3f4b4e73c4b4f
     name: alertmanager
     type: application
     urls:
@@ -38,9 +38,9 @@ entries:
   common:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-04-01T01:53:34.24081798Z"
+    created: "2022-04-01T02:05:50.431890878Z"
     description: A Helm chart for Kubernetes
-    digest: 3c42529681d4f36a5996724e2c8f36b93d1ac30443699e581b28c9d24eb027ae
+    digest: 2e14cbf6e4e707cff662da2f9ed17eafb5a2a0d8c61597d9c4550c9d58807946
     name: common
     type: library
     urls:
@@ -49,7 +49,7 @@ entries:
   cortex:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-04-01T01:53:34.246927574Z"
+    created: "2022-04-01T02:05:50.438855867Z"
     dependencies:
     - name: common
       repository: http://charts.udmire.cn/
@@ -81,7 +81,7 @@ entries:
       version: 8.0.9
     description: Horizontally scalable, highly available, multi-tenant, long term
       Prometheus.
-    digest: 5ad042de3f492efd9a7728e79da91e00b3c043d76d9ea877286f6f4616d55107
+    digest: c806f782ae163579f44d97ddd59f83dc89e95d25b13a1da10cc299361aa7f797
     home: https://cortexmetrics.io/
     kubeVersion: ^1.19.0-0
     name: cortex
@@ -91,7 +91,7 @@ entries:
   cortex-distributed:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-04-01T01:53:34.253669168Z"
+    created: "2022-04-01T02:05:50.446649467Z"
     dependencies:
     - name: common
       repository: http://charts.udmire.cn/
@@ -123,7 +123,7 @@ entries:
       version: 8.0.9
     description: Horizontally scalable, highly available, multi-tenant, long term
       Prometheus.
-    digest: 6a248d23ff750d837ba3400664402b509976750587d7beff939504237a598202
+    digest: 479bebf092367fcb3bed4818ca412a26ee87f63f4748465dc614015f88aa30b5
     home: https://cortexmetrics.io/
     kubeVersion: ^1.19.0-0
     name: cortex-distributed
@@ -133,7 +133,7 @@ entries:
   cortex-simple-scalable:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-04-01T01:53:34.260761461Z"
+    created: "2022-04-01T02:05:50.453331853Z"
     dependencies:
     - name: common
       repository: http://charts.udmire.cn/
@@ -165,7 +165,7 @@ entries:
       version: 8.0.9
     description: Horizontally scalable, highly available, multi-tenant, long term
       Prometheus.
-    digest: 77720e333a5a72ee8fc1bd3f9bde23f08a2a43611c9f770cc0a3203a43762517
+    digest: 61369454b2bea9a441ad35e0ea79e4a8e6703d375866cdfbd91ba4efefa00ee6
     home: https://cortexmetrics.io/
     kubeVersion: ^1.19.0-0
     name: cortex-simple-scalable
@@ -175,7 +175,7 @@ entries:
   grafana:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-04-01T01:53:34.268593054Z"
+    created: "2022-04-01T02:05:50.461484658Z"
     dependencies:
     - name: common
       repository: http://charts.udmire.cn/
@@ -185,7 +185,7 @@ entries:
       repository: https://charts.bitnami.com/bitnami
       version: 16.5.2
     description: A Helm chart for Kubernetes
-    digest: be1abfeabe808acfbbeaa5e4953a210e24fa9d768e50a76f5e4e4dfd86e5a074
+    digest: 28c2f6c388cec1584e54d47bde698165c5a2793feaeb836319d265fc1f5095c7
     name: grafana
     type: application
     urls:
@@ -194,7 +194,7 @@ entries:
   loki:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-04-01T01:53:34.273785849Z"
+    created: "2022-04-01T02:05:50.465978416Z"
     dependencies:
     - name: common
       repository: http://charts.udmire.cn/
@@ -225,7 +225,7 @@ entries:
       repository: https://helm.min.io/
       version: 8.0.9
     description: A Helm chart for Kubernetes
-    digest: 55b1652fe131f78cf193b52e642d88b8def6b0d87e3b2efe36bd87a588f6e764
+    digest: 6a45f47e21165a8f8d627404db51f94ad597a8c458f46b4d11c3cadf87f2c3f3
     name: loki
     type: application
     urls:
@@ -234,7 +234,7 @@ entries:
   loki-distributed:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-04-01T01:53:34.28262914Z"
+    created: "2022-04-01T02:05:50.473671215Z"
     dependencies:
     - name: common
       repository: http://charts.udmire.cn/
@@ -265,7 +265,7 @@ entries:
       repository: https://helm.min.io/
       version: 8.0.9
     description: A Helm chart for Kubernetes
-    digest: 432e3a19eb6c2b2d53a62980ee7bb663378720f3c2a63f68786edbce80cef1c4
+    digest: 7940b858a54e7165f9307789582cc63efcc99047c61b6babc459534bd98c1d07
     name: loki-distributed
     type: application
     urls:
@@ -274,7 +274,7 @@ entries:
   loki-simple-scalable:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-04-01T01:53:34.287461036Z"
+    created: "2022-04-01T02:05:50.478583578Z"
     dependencies:
     - name: common
       repository: http://charts.udmire.cn/
@@ -305,7 +305,7 @@ entries:
       repository: https://helm.min.io/
       version: 8.0.9
     description: A Helm chart for Kubernetes
-    digest: 6088a459ace73ba568d77485e0191d3638e693406fa5e28eadc9df8882935fff
+    digest: 19b52b755b1daaa8eb614abc63e210ae0c892c28436357020fa18dd5508d9d65
     name: loki-simple-scalable
     type: application
     urls:
@@ -314,13 +314,13 @@ entries:
   memcached:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-04-01T01:53:34.288443335Z"
+    created: "2022-04-01T02:05:50.479462489Z"
     dependencies:
     - name: common
       repository: http://charts.udmire.cn/
       version: 0.1.0
     description: A Helm chart for Kubernetes
-    digest: d5f1cd44f760f3fe12ecfdd0f99376b6da343b9e18e8563420ba9975871675bb
+    digest: b9ec64d175141b2164737c41c2bdca7e4cf465150dd81616247bbf366c794687
     name: memcached
     type: application
     urls:
@@ -329,13 +329,13 @@ entries:
   nginx:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-04-01T01:53:34.289606134Z"
+    created: "2022-04-01T02:05:50.480415801Z"
     dependencies:
     - name: common
       repository: http://charts.udmire.cn/
       version: 0.1.0
     description: A Helm chart for Kubernetes
-    digest: bd0e4e8d3a724f0e522da60bfe59d56ab817bf12ea4d8e197f96efb36676854b
+    digest: e09722a177451d414e3f06b1f206cbf18a3c7cdeb1adf4e2938941d784abee52
     name: nginx
     type: application
     urls:
@@ -344,13 +344,13 @@ entries:
   synthetic:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-04-01T01:53:34.292072231Z"
+    created: "2022-04-01T02:05:50.481447115Z"
     dependencies:
     - name: common
       repository: http://charts.udmire.cn/
       version: 0.1.0
     description: A Helm chart for Kubernetes
-    digest: 40f184f7c60aba7eccb9dc892aca50711828a8bbd4c7e1eeda6eee91925422dd
+    digest: 3ea3e38041c7ea7097d7af03e3534585e63ed2195362e6967f79c24b36ebeb2f
     name: synthetic
     type: application
     urls:
@@ -359,7 +359,7 @@ entries:
   tempo:
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-04-01T01:53:34.298256825Z"
+    created: "2022-04-01T02:05:50.488009899Z"
     dependencies:
     - name: common
       repository: http://charts.udmire.cn/
@@ -375,10 +375,10 @@ entries:
       repository: https://helm.min.io/
       version: 8.0.9
     description: A Helm chart for Kubernetes
-    digest: 93ca15c49a9d44a8a9771986443f78ffd6c574556a986990e365da4e870e3867
+    digest: 2343ed6596812b308f16531ccc79c5fbda97238a89cc65d6aa655c70b46ec352
     name: tempo
     type: application
     urls:
     - https://udmire.github.io/charts/tempo-0.1.0.tgz
     version: 0.1.0
-generated: "2022-04-01T01:53:34.236569384Z"
+generated: "2022-04-01T02:05:50.426665911Z"
