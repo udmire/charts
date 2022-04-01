@@ -61,13 +61,3 @@ Create the name of the service account to use
 {{- end }}
 {{- end }}
 
-{{/*
-Determine the policy api version
-*/}}
-{{- define "memcached.pdbVersion" -}}
-{{- if or (.Capabilities.APIVersions.Has "policy/v1/PodDisruptionBudget") (semverCompare ">=1.21" .Capabilities.KubeVersion.Version) -}}
-policy/v1
-{{- else -}}
-policy/v1beta1
-{{- end -}}
-{{- end -}}

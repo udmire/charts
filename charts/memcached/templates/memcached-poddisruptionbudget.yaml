@@ -1,5 +1,5 @@
 {{- if and (gt (int .Values.replicas) 1) (.Values.podDisruptionBudget) }}
-apiVersion: {{ include "memcached.pdbVersion" . }}
+apiVersion: {{ include "PdbVersion" . }}
 kind: PodDisruptionBudget
 metadata:
   name: {{ include "memcached.fullname" . }}

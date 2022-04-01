@@ -1,5 +1,5 @@
 {{- if and (gt (int .Values.nginx.replicas) 1) (.Values.nginx.podDisruptionBudget) }}
-apiVersion: {{ include "nginx.pdbVersion" . }}
+apiVersion: {{ include "PdbVersion" . }}
 kind: PodDisruptionBudget
 metadata:
   name: {{ include "nginx.nginxFullname" . }}
