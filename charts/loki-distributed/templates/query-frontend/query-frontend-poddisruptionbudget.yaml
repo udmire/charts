@@ -1,5 +1,5 @@
 {{- if and (gt (int .Values.query_frontend.replicas) 1) (.Values.query_frontend.podDisruptionBudget) (.Values.query_frontend.enabled) }}
-apiVersion: {{ include "loki.pdbVersion" . }}
+apiVersion: {{ include "PdbVersion" . }}
 kind: PodDisruptionBudget
 metadata:
   name: {{ include "loki.queryFrontendFullname" . }}

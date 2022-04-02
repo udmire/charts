@@ -1,5 +1,5 @@
 {{- if and (gt (int .Values.distributor.replicas) 1) (.Values.distributor.podDisruptionBudget) (.Values.distributor.enabled) }}
-apiVersion: {{ include "cortex.pdbVersion" . }}
+apiVersion: {{ include "PdbVersion" . }}
 kind: PodDisruptionBudget
 metadata:
   name: {{ include "cortex.distributorFullname" . }}

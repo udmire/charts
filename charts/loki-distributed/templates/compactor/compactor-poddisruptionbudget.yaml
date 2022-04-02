@@ -1,5 +1,5 @@
 {{- if and (gt (int .Values.compactor.replicas) 1) (.Values.compactor.podDisruptionBudget) }}
-apiVersion: {{ include "loki.pdbVersion" . }}
+apiVersion: {{ include "PdbVersion" . }}
 kind: PodDisruptionBudget
 metadata:
   name: {{ include "loki.compactorFullname" . }}

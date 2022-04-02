@@ -1,5 +1,5 @@
 {{- if and (gt (int .Values.index_gateway.replicas) 1) (.Values.index_gateway.podDisruptionBudget) }}
-apiVersion: {{ include "loki.pdbVersion" . }}
+apiVersion: {{ include "PdbVersion" . }}
 kind: PodDisruptionBudget
 metadata:
   name: {{ include "loki.indexGatewayFullname" . }}

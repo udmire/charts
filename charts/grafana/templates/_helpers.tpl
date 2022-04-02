@@ -61,17 +61,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
-Determine the policy api version
-*/}}
-{{- define "grafana.pdbVersion" -}}
-{{- if or (.Capabilities.APIVersions.Has "policy/v1/PodDisruptionBudget") (semverCompare ">=1.21" .Capabilities.KubeVersion.Version) -}}
-policy/v1
-{{- else -}}
-policy/v1beta1
-{{- end -}}
-{{- end -}}
-
-{{/*
 Get checksum of config secret or configMap
 */}}
 {{- define "grafana.configChecksum" -}}

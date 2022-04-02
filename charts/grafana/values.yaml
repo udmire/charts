@@ -46,7 +46,7 @@ ingress:
 
 grafana:
   enabled: true
-  replicas: 2
+  replicas: 1
 
   service:
     annotations: {}

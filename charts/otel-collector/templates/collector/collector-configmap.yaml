@@ -1,0 +1,75 @@
+{{- if .Values.collector.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "otel-collector.collectorFullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "otel-collector.collectorLabels" . | nindent 4 }}
+data:
+  collector.yaml: |-
+    exporters:
+      logging: {}
+      prometheusremotewrite:
+        {{- include "ContentRender" ( dict "value" .Values.config.exporters.metric "context" $ ) | nindent 8 }}
+      loki: 
+        {{- include "ContentRender" ( dict "value" .Values.config.exporters.log "context" $ ) | nindent 8 }}
+      otlp:
+        {{- include "ContentRender" ( dict "value" .Values.config.exporters.trace "context" $ ) | nindent 8 }}
+    extensions:
+      health_check: {}
+      memory_ballast: {}
+    processors:
+      batch: {}
+      memory_limiter:
+        check_interval: 5s
+        limit_mib: 1638
+        spike_limit_mib: 512
+    receivers:
+      {{- include "otel-collector.receiverConfig" . | nindent 6 }}
+      prometheus:
+        config:
+          scrape_configs:
+          - job_name: otel-collector/collector
+            scrape_interval: 10s
+            static_configs:
+            - targets:
+              - ${MY_POD_IP}:8888
+    service:
+      extensions:
+      - health_check
+      - memory_ballast
+      pipelines:
+        logs:
+          exporters:
+          - logging
+          - loki
+          processors:
+          - memory_limiter
+          - batch
+          receivers:
+          - otlp
+        metrics:
+          exporters:
+          - logging
+          processors:
+          - memory_limiter
+          - batch
+          receivers:
+          - otlp
+          - prometheus
+        traces:
+          exporters:
+          - logging
+          - otlp
+          processors:
+          - memory_limiter
+          - batch
+          receivers:
+          - otlp
+          - jaeger
+          - zipkin
+      telemetry:
+        metrics:
+          address: 0.0.0.0:8888
+{{- end }}

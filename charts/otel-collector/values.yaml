@@ -1,0 +1,226 @@
+# Default values for otel-collector.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+global:
+  image:
+    otelCollector:
+      registry: ""
+      repository: otel/opentelemetry-collector-contrib
+      tag: "0.48.0"
+      pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+config:
+  receivers:
+    jaeger:
+      thriftCompact: true
+      thriftHttp: true
+      thriftGrpc: true
+    otlp:
+      http: true
+      grpc: true
+    zipkin: true
+  exporters:
+    metric: 
+      endpoint: "https://my-cortex:7900/api/v1/push"
+    log:
+      endpoint: http://loki:3100/loki/api/v1/push
+      format: json
+      labels:
+        resource:
+          host.name: "hostname"
+    trace: 
+      endpoint: trace-tempo-distributor.infrastore.svc.cluster.local:4317
+      tls:
+        insecure: true
+      headers:
+        x-scope-orgid: foo-bar-baz
+agent:
+  enabled: true
+  containerLogs:
+    enabled: false
+  hostNetwork: true
+  service:
+    annotations: {}
+    labels: {}
+
+  serviceAccount:
+    # -- "" disables the individual serviceAccount and uses the global serviceAccount for that component
+    name: ""
+
+  resources: {}
+
+  # -- Additional Cortex container arguments, e.g. log.level (debug, info, warn, error)
+  extraArgs: {}
+
+  # -- Pod Labels
+  podLabels: {}
+
+  # -- Pod Annotations
+  podAnnotations: {}
+
+  nodeSelector: {}
+  
+  annotations: {}
+
+  startupProbe:
+    httpGet:
+      path: /
+      port: 13133
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 13133
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 13133
+
+  securityContext: {}
+
+  containerSecurityContext:
+    enabled: false
+    readOnlyRootFilesystem: true
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+
+  terminationGracePeriodSeconds: 10
+
+  tolerations: []
+
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+    # - name: zoneinfo
+    #   hostPath:
+    #     path: /etc/localtime
+    # - name: varlog
+    #   hostPath:
+    #     path: /var/log
+    # - name: docker
+    #   hostPath:
+    #     path: /data/kubernetes/docker
+  extraVolumeMounts: []
+    # - name: zoneinfo
+    #   mountPath: /etc/localtime
+    #   readOnly: true
+    # - name: varlog
+    #   mountPath: /var/log
+    # - name: docker
+    #   mountPath: /data/kubernetes/docker
+    
+  extraPorts: []
+  env: []
+  lifecycle: {}
+
+collector:
+  enabled: false
+  replicas: 1
+
+  service:
+    annotations: {}
+    labels: {}
+
+  serviceAccount:
+    name:
+
+  resources: {}
+
+  # -- Additional Cortex container arguments, e.g. log.level (debug, info, warn, error)
+  extraArgs: {}
+
+  # -- Pod Labels
+  podLabels: {}
+
+  # -- Pod Annotations
+  podAnnotations: {}
+
+  nodeSelector: {}
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                    - collector
+            topologyKey: 'kubernetes.io/hostname'
+
+  annotations: {}
+
+  autoscaling:
+    enabled: false
+    minReplicas: 3
+    maxReplicas: 30
+    targetMemoryUtilizationPercentage: 80
+    behavior:
+      scaleDown:
+        policies:
+          - type: Pods
+            value: 1
+            periodSeconds: 1800
+        stabilizationWindowSeconds: 3600
+      scaleUp:
+        policies:
+          - type: Pods
+            value: 1
+            periodSeconds: 1800
+
+  startupProbe:
+    httpGet:
+      path: /
+      port: 13133
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 13133
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 13133
+
+  securityContext: {}
+
+  containerSecurityContext:
+    enabled: false
+    readOnlyRootFilesystem: true
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+
+  terminationGracePeriodSeconds: 10
+
+  tolerations: []
+
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  env: []

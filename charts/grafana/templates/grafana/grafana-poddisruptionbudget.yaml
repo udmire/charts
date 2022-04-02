@@ -1,5 +1,5 @@
 {{- if and (gt (int .Values.grafana.replicas) 1) (.Values.grafana.podDisruptionBudget) }}
-apiVersion: {{ include "grafana.pdbVersion" . }}
+apiVersion: {{ include "PdbVersion" . }}
 kind: PodDisruptionBudget
 metadata:
   name: {{ include "grafana.grafanaFullname" . }}

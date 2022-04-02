@@ -1,0 +1,91 @@
+{{- if .Values.collector.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "otel-collector.collectorFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "otel-collector.collectorLabels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.collector.annotations | nindent 4 }}
+spec:
+  {{- if not .Values.collector.autoscaling.enabled }}
+  replicas: {{ .Values.collector.replicas }}
+  {{- end }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      {{- include "otel-collector.collectorSelectorLabels" . | nindent 6 }}
+  strategy:
+    {{- toYaml .Values.collector.strategy | nindent 4 }}
+  template:
+    metadata:
+      labels:
+        {{- include "otel-collector.collectorLabels" . | nindent 8 }}
+        {{- with .Values.collector.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        checksum/config: {{ include "otel-collector.collectorConfigChecksum" . }}
+        {{- if .Values.collector.podAnnotations }}
+        {{- include "ContentRender" ( dict "value" .Values.collector.podAnnotations "context" . ) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.collector.serviceAccount.name | default (include "otel-collector.serviceAccountName" . ) }}
+      {{- if .Values.collector.priorityClassName }}
+      priorityClassName: {{ .Values.collector.priorityClassName }}
+      {{- end }}
+      {{- if .Values.collector.securityContext.enabled }}
+      securityContext: {{- omit .Values.collector.securityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- toYaml .Values.collector.initContainers | nindent 8 }}
+      containers:
+        - name: collector
+          {{- include "Image" .Values.global.image.otelCollector | nindent 10 }}
+          command:
+            - /otelcol-contrib
+          args:
+            - --config=/etc/opentelemetry/collector.yaml
+          volumeMounts:
+            {{- if .Values.agent.extraVolumeMounts }}
+            {{- toYaml .Values.agent.extraVolumeMounts | nindent 12}}
+            {{- end }}
+            - mountPath: /etc/opentelemetry
+              name: {{ template "otel-collector.collectorFullname" . }}-config
+          ports:
+            {{- include "otel-collector.collectorContainerListenPort" . | nindent 12 }}
+          startupProbe:
+            {{- toYaml .Values.collector.startupProbe | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.collector.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.collector.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.collector.resources | nindent 12 }}
+          {{- if .Values.collector.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.collector.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          env:
+            - name: MY_POD_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+            {{- if .Values.collector.env }}
+            {{- include "ContentRender" ( dict "value" .Values.collector.env "context" . ) | nindent 12 }}
+            {{- end }}
+      nodeSelector:
+        {{- toYaml .Values.collector.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.collector.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.collector.tolerations | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.collector.terminationGracePeriodSeconds }}
+      volumes:
+        {{- include "otel-collector.collectorConfigVolume" . | nindent 8 }}
+        {{- if .Values.collector.extraVolumes }}
+        {{- toYaml .Values.collector.extraVolumes | nindent 8}}
+        {{- end }}
+{{- end -}}      
+      

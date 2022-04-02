@@ -1,0 +1,14 @@
+{{- if and .Values.collector.enabled (gt (int .Values.collector.replicas) 1) (.Values.collector.podDisruptionBudget) }}
+apiVersion: {{ include "PdbVersion" . }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "otel-collector.collectorFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "otel-collector.collectorLabels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "otel-collector.collectorSelectorLabels" . | nindent 6 }}
+  {{- toYaml .Values.collector.podDisruptionBudget | nindent 2 }}
+{{- end }}
