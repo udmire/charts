@@ -11,7 +11,7 @@ data:
     server:
       log_level: info
       http_listen_port: {{ .Values.config.server.httpListenPort }}
-    {{- if .Values.config.metrics.remoteWrites -}}
+    {{- if .Values.config.metrics.remoteWrites }}
     metrics:
       configs:
         - host_filter: true
@@ -170,8 +170,8 @@ data:
         remote_write: 
           {{- include "ContentRender" ( dict "value" .Values.config.metrics.remoteWrites "context" . ) | nindent 10 }}
       wal_directory: /var/lib/agent/data
-    {{- end -}}
-    {{- if .Values.config.logs.clients -}}
+    {{- end }}
+    {{- if .Values.config.logs.clients }}
     logs:
       configs:
         - clients:
@@ -215,8 +215,8 @@ data:
                     - __meta_kubernetes_pod_container_name
                   target_label: __path__
       positions_directory: /tmp/positions
-    {{- end -}}
-    {{- if .Values.config.traces.remoteWrites -}}
+    {{- end }}
+    {{- if .Values.config.traces.remoteWrites }}
     traces:
       configs:
         - name: default
@@ -263,7 +263,7 @@ data:
               tls_config:
                 ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
                 insecure_skip_verify: false
-    {{- end -}}
+    {{- end }}
   strategies.json: |-
     {"default_strategy": {"param": 0.001, "type": "probabilistic"}}
 {{- end }}
