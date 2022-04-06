@@ -35,6 +35,7 @@ spec:
       {{- end }}
       {{- if .Values.agent.hostNetwork }}
       hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       {{- end }}
       tolerations:
         {{- toYaml .Values.agent.tolerations | nindent 8 }}
