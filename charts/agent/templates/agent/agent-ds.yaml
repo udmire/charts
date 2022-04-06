@@ -58,6 +58,7 @@ spec:
             - name: http-metrics
               containerPort: {{ .Values.config.server.httpListenPort }}
               protocol: TCP
+            {{- include "agent.agentContainerListenPort" . | nindent 12 }}
           startupProbe:
             {{- toYaml .Values.agent.startupProbe | nindent 12 }}
           livenessProbe:

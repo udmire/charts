@@ -24,6 +24,15 @@ serviceAccount:
 config:
   server: 
     httpListenPort: 8080
+  receivers:
+    jaeger:
+      thriftCompact: true
+      thriftHttp: true
+      thriftGrpc: true
+    otlp:
+      http: true
+      grpc: true
+    zipkin: true
   metrics:
     remoteWrites: []
   logs:
