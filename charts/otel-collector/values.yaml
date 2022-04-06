@@ -101,7 +101,10 @@ agent:
 
   terminationGracePeriodSeconds: 10
 
-  tolerations: []
+  tolerations:
+    - key: node-role.kubernetes.io/master
+      operator: Exists
+      effect: NoSchedule
 
   podDisruptionBudget:
     maxUnavailable: 1

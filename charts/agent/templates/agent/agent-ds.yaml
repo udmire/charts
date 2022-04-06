@@ -36,6 +36,8 @@ spec:
       {{- if .Values.agent.hostNetwork }}
       hostNetwork: true
       {{- end }}
+      tolerations:
+        {{- toYaml .Values.agent.tolerations | nindent 8 }}
       initContainers:
         {{- toYaml .Values.agent.initContainers | nindent 8 }}
       containers:
