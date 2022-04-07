@@ -183,7 +183,7 @@ write:
   statefulStrategy:
     type: RollingUpdate
 
-  terminationGracePeriodSeconds: 240
+  terminationGracePeriodSeconds: 60
 
   tolerations: []
 
@@ -300,7 +300,7 @@ read:
   strategy:
     type: RollingUpdate
 
-  terminationGracePeriodSeconds: 240
+  terminationGracePeriodSeconds: 60
 
   tolerations: []
 

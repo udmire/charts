@@ -191,7 +191,7 @@ write:
   statefulStrategy:
     type: RollingUpdate
 
-  terminationGracePeriodSeconds: 240
+  terminationGracePeriodSeconds: 60
 
   tolerations: []
 
@@ -340,7 +340,7 @@ read:
       maxSurge: 0
       maxUnavailable: 1
 
-  terminationGracePeriodSeconds: 180
+  terminationGracePeriodSeconds: 10
 
   tolerations: []
 

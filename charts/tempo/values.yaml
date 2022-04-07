@@ -420,7 +420,7 @@ ingester:
   statefulStrategy:
     type: RollingUpdate
 
-  terminationGracePeriodSeconds: 240
+  terminationGracePeriodSeconds: 60
 
   tolerations: []
 
@@ -519,7 +519,7 @@ querier:
   strategy:
     type: RollingUpdate
 
-  terminationGracePeriodSeconds: 180
+  terminationGracePeriodSeconds: 60
 
   tolerations: []
 
@@ -623,7 +623,7 @@ query_frontend:
       maxSurge: 0
       maxUnavailable: 1
 
-  terminationGracePeriodSeconds: 180
+  terminationGracePeriodSeconds: 60
 
   tolerations: []
 

@@ -191,7 +191,7 @@ instance:
   statefulStrategy:
     type: RollingUpdate
 
-  terminationGracePeriodSeconds: 240
+  terminationGracePeriodSeconds: 60
 
   tolerations: []
 

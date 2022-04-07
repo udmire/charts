@@ -153,7 +153,7 @@ compactor:
   strategy:
     type: RollingUpdate
 
-  terminationGracePeriodSeconds: 240
+  terminationGracePeriodSeconds: 60
 
   tolerations: []
 
@@ -426,7 +426,7 @@ ingester:
   statefulStrategy:
     type: RollingUpdate
 
-  terminationGracePeriodSeconds: 240
+  terminationGracePeriodSeconds: 60
 
   tolerations: []
 
@@ -512,7 +512,7 @@ ruler:
       maxSurge: 0
       maxUnavailable: 1
 
-  terminationGracePeriodSeconds: 180
+  terminationGracePeriodSeconds: 60
 
   tolerations: []
 
@@ -620,7 +620,7 @@ querier:
       maxSurge: 0
       maxUnavailable: 1
 
-  terminationGracePeriodSeconds: 180
+  terminationGracePeriodSeconds: 60
 
   tolerations: []
 
@@ -729,7 +729,7 @@ query_frontend:
       maxSurge: 0
       maxUnavailable: 1
 
-  terminationGracePeriodSeconds: 180
+  terminationGracePeriodSeconds: 60
 
   tolerations: []
 
@@ -828,7 +828,7 @@ query_scheduler:
       maxSurge: 0
       maxUnavailable: 1
 
-  terminationGracePeriodSeconds: 180
+  terminationGracePeriodSeconds: 60
 
   tolerations: []
 
@@ -978,7 +978,7 @@ index_gateway:
       maxSurge: 0
       maxUnavailable: 1
 
-  terminationGracePeriodSeconds: 180
+  terminationGracePeriodSeconds: 60
 
   tolerations: []
 
