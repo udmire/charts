@@ -38,7 +38,7 @@ config:
       endpoint: http://loki:3100/loki/api/v1/push
       format: json
       labels:
-        resource:
+        attributes:
           host.name: "hostname"
     trace: 
       endpoint: trace-tempo-distributor.infrastore.svc.cluster.local:4317
@@ -48,7 +48,7 @@ agent:
   enabled: true
   containerLogs:
     enabled: false
-  hostNetwork: true
+  hostNetwork: false
   service:
     annotations: {}
     labels: {}
