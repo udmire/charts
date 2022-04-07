@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "agent.agentFullname" . }}
+  name: {{ include "otel-collector.agentFullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "agent.agentLabels" . | nindent 4 }}
+    {{- include "otel-collector.agentLabels" . | nindent 4 }}
     {{- with .Values.agent.service.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
@@ -13,6 +13,6 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-    {{- include "agent.agentServiceListenPort" . | nindent 4 }}
+    {{- include "otel-collector.agentServiceListenPort" . | nindent 4 }}
   selector:
-    {{- include "agent.agentSelectorLabels" . | nindent 4 }}
+    {{- include "otel-collector.agentSelectorLabels" . | nindent 4 }}
