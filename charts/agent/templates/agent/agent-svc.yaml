@@ -5,11 +5,11 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "agent.agentLabels" . | nindent 4 }}
-    {{- with .Values.alertmanager.service.labels }}
+    {{- with .Values.agent.service.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
   annotations:
-    {{- toYaml .Values.alertmanager.service.annotations | nindent 4 }}
+    {{- toYaml .Values.agent.service.annotations | nindent 4 }}
 spec:
   type: ClusterIP
   ports:
