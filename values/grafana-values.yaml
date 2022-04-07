@@ -1,0 +1,89 @@
+global:
+  # the default cluster domain suffix
+  clusterDomain: &defaultClusterDomain cluster.local
+
+grafana:
+  replicas: 1
+  env:
+    - name: GF_PATHS_CONFIG
+      value: /etc/grafana/custom.ini
+
+config:
+  customIni: |-
+    [plugins]
+    enable_alpha = true
+    [unified_alerting]
+    enabled = true
+
+  datasources:
+    - name: metric
+      type: prometheus
+      typeName: Prometheus
+      orgId: 1
+      uid: metric
+      url: "http://gateway-nginx-nginx.{{.Release.Namespace}}.svc:8889/api/prom"
+      typeLogoUrl: "public/app/plugins/datasource/prometheus/img/prometheus_logo.svg"
+      isDefault: true
+      access: proxy
+      jsonData:
+        alertmanagerUid: alert
+        exemplarTraceIdDestinations: 
+          - datasourceUid: trace
+            name: TraceID
+    - name: log
+      type: loki
+      typeName: Loki
+      orgId: 1
+      uid: log
+      access: proxy
+      url: "http://gateway-nginx-nginx.{{.Release.Namespace}}.svc:8888/"
+      jsonData:
+        maxLines: 1000
+        alertmanagerUid: alert
+        derivedFields:
+          # Field with internal link pointing to data source in Grafana.
+          # Right now, Grafana supports only Jaeger and Zipkin data sources as link targets.
+          # datasourceUid value can be anything, but it should be unique across all defined data source uids.
+          - datasourceUid: trace
+            matcherRegex: "traceID=(\\w+)"
+            name: TraceID
+            # url will be interpreted as query for the datasource
+            url: '$${__value.raw}'
+    - name: trace
+      type: tempo
+      typeName: Tempo
+      orgId: 1
+      uid: trace
+      # Access mode - proxy (server in the UI) or direct (browser in the UI).
+      access: proxy
+      url: http://gateway-nginx-nginx.{{.Release.Namespace}}.svc:8890/
+      jsonData:
+        httpMethod: GET
+        tracesToLogs:
+          datasourceUid: 'log'
+          tags: ['job', 'instance', 'pod', 'namespace']
+          mappedTags: [{ key: 'service.name', value: 'service' }]
+          mapTagNamesEnabled: false
+          spanStartTimeShift: '1h'
+          spanEndTimeShift: '1h'
+          filterByTraceID: false
+          filterBySpanID: false
+          lokiSearch: true
+        serviceMap:
+          datasourceUid: 'metric'
+        search:
+          hide: false
+        nodeGraph:
+          enabled: true
+    - name: alert
+      type: alertmanager
+      typeName: Alertmanager
+      orgId: 1
+      uid: alert
+      access: proxy
+      url: 'http://gateway-nginx-nginx.{{.Release.Namespace}}.svc:8892/alertmanager'
+      typeLogoUrl: 'public/app/plugins/datasource/alertmanager/img/logo.svg'
+      jsonData:
+        implementation: 'prometheus'
+redis:
+  enabled: false

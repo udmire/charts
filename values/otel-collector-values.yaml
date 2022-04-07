@@ -1,0 +1,25 @@
+config:
+  exporters:
+    metric: 
+      endpoint: "http://gateway-nginx-nginx.infrastore.svc.cluster.local:8889/api/prom/push"
+      tls:
+        insecure: true
+        insecure_skip_verify: true
+    log:
+      endpoint: http://gateway-nginx-nginx.infrastore.svc.cluster.local:8888/api/prom/push
+      format: json
+      labels:
+        resource:
+          host.name: "hostname"
+    trace: 
+      endpoint: gateway-nginx-nginx.infrastore.svc.cluster.local:8891
+      tls:
+        insecure: true
+        insecure_skip_verify: true
+      headers:
+        x-scope-orgid: 1
+
+agent:
+  enabled: true
+collector:
+  enabled: false

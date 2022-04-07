@@ -44,8 +44,6 @@ config:
       endpoint: trace-tempo-distributor.infrastore.svc.cluster.local:4317
       tls:
         insecure: true
-      headers:
-        x-scope-orgid: foo-bar-baz
 agent:
   enabled: true
   containerLogs:

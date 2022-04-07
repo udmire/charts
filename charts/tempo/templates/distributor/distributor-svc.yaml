@@ -50,7 +50,7 @@ spec:
     {{- end }}
     {{- if .Values.config.traces.otlp.http }}
     - name: otlp-http
-      port: 55681
+      port: 4318
       targetPort: otlp-http
       protocol: TCP
     {{- end }}
