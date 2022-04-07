@@ -95,7 +95,7 @@ spec:
             {{- end }}
             {{- if .Values.config.traces.otlp.http }}
             - name: otlp-http
-              containerPort: 55681
+              containerPort: 4318
               protocol: TCP
             {{- end }}
             {{- if .Values.config.traces.otlp.grpc }}

@@ -85,5 +85,7 @@ env:
   - name: TOPOLOGY_FILE
     value: /etc/topology/load-generator.json
   - name: JAEGER_COLLECTOR_URL
-    value: http://collector-otel-collector-collector.infrastore.svc.cluster.local:14268
+    # value: http://collector-otel-collector-collector.infrastore.svc.cluster.local:14268
+    # value: http://collector-otel-collector-agent.infrastore.svc.cluster.local:14268
+    value: http://agent-agent.infrastore.svc.cluster.local:14268
     # value: http://192.168.65.4:14268

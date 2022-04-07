@@ -1,0 +1,49 @@
+global:
+  # the default cluster domain suffix
+  clusterDomain: &defaultClusterDomain cluster.local
+
+config:
+  server: 
+    httpListenPort: 12345
+  metrics:
+    remoteWrites:
+      - name: metric
+        url: 'http://gateway-nginx-nginx.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8889/api/prom/push'    
+  logs:
+    clients: 
+      - url: 'http://gateway-nginx-nginx.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8888/api/prom/push'
+  traces:
+    remoteWrites:
+      - endpoint: 'gateway-nginx-nginx.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8891'
+        insecure: true
+        format: otlp
+        headers:
+          x-scope-orgid: 1
+        
+agent:
+  hostNetwork: false
+  extraVolumes: 
+    - name: zoneinfo
+      hostPath:
+        path: /etc/localtime
+    - name: varlog
+      hostPath:
+        path: /var/log
+      #containers
+    - name: docker
+      hostPath:
+        path: /var/lib/docker/containers
+        # path: /var/lib/docker
+  extraVolumeMounts: 
+    - name: zoneinfo
+      mountPath: /etc/localtime
+      readOnly: true
+    - name: varlog
+      mountPath: /var/log
+    - name: docker
+      #containers
+      # mountPath: /var/lib/docker
+      mountPath: /var/lib/docker/containers
+      readOnly: true
+scraper:
+  enabled: false

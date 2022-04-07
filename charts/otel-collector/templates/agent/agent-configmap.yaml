@@ -51,6 +51,7 @@ data:
           - batch
           receivers:
           - otlp
+          {{- include "otel-collector.containerLogsReceiver" . | nindent 10 }}
         metrics:
           exporters:
           - logging
@@ -74,4 +75,6 @@ data:
       telemetry:
         metrics:
           address: 0.0.0.0:8888
+        logs:
+          level: "debug"
 {{- end }}
