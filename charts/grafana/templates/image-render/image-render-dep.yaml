@@ -1,0 +1,90 @@
+{{ if .Values.image_render.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "grafana.imageRenderFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "grafana.imageRenderLabels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.image_render.annotations | nindent 4 }}
+spec:
+  replicas: {{ .Values.image_render.replicas }}
+  selector:
+    matchLabels:
+      {{- include "grafana.imageRenderSelectorLabels" . | nindent 6 }}
+  strategy:
+    {{- toYaml .Values.image_render.strategy | nindent 4 }}
+  template:
+    metadata:
+      labels:
+        {{- include "grafana.imageRenderLabels" . | nindent 8 }}
+        {{- with .Values.image_render.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        checksum/config: {{ include "grafana.configChecksum" . }}
+        {{- if .Values.image_render.podAnnotations }}
+        {{- include "ContentRender" ( dict "value" .Values.image_render.podAnnotations "context" . ) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.image_render.serviceAccount.name | default (include "grafana.serviceAccountName" . ) }}
+      {{- if .Values.image_render.priorityClassName }}
+      priorityClassName: {{ .Values.image_render.priorityClassName }}
+      {{- end }}
+      {{- if .Values.image_render.securityContext.enabled }}
+      securityContext: {{- omit .Values.image_render.securityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- toYaml .Values.image_render.initContainers | nindent 8 }}
+      containers:
+        - name: image-render
+          {{- include "Image" .Values.global.image.imageRender | nindent 10 }}
+          volumeMounts:
+            {{- if .Values.image_render.extraVolumeMounts }}
+            {{- toYaml .Values.image_render.extraVolumeMounts | nindent 12}}
+            {{- end }}
+            - mountPath: /tmp
+              name: image-render-storage
+          ports:
+            - name: http-metrics
+              containerPort: {{ .Values.config.server.imageRenderPort }}
+              protocol: TCP
+          startupProbe:
+            {{- toYaml .Values.image_render.startupProbe | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.image_render.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.image_render.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.image_render.resources | nindent 12 }}
+          {{- if .Values.image_render.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.image_render.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.image_render.env }}
+          env:
+            - name: HTTP_PORT
+              value: {{ .Values.config.server.imageRenderPort | quote }}
+            {{- toYaml .Values.image_render.env | nindent 12 }}
+          {{- end }}
+          {{- with .Values.image_render.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- if .Values.image_render.extraContainers }}
+      {{- toYaml .Values.image_render.extraContainers | nindent 8}}
+      {{- end }}
+      nodeSelector:
+        {{- toYaml .Values.image_render.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.image_render.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.image_render.tolerations | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.image_render.terminationGracePeriodSeconds }}
+      volumes:
+        - emptyDir: {}
+          name: image-render-storage
+        {{- if .Values.image_render.extraVolumes }}
+        {{- toYaml .Values.image_render.extraVolumes | nindent 8}}
+        {{- end }}
+{{- end -}}

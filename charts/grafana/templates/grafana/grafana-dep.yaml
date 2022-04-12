@@ -77,10 +77,16 @@ spec:
           {{- if .Values.grafana.containerSecurityContext.enabled }}
           securityContext: {{- omit .Values.grafana.containerSecurityContext "enabled" | toYaml | nindent 12 }}
           {{- end }}
-          {{- if .Values.grafana.env }}
           env:
+            {{- if .Values.image_render.enabled }}
+            - name: GF_RENDERING_SERVER_URL
+              value: http://{{ include "grafana.imageRenderFullname" . }}.{{ .Release.Namespace}}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.server.imageRenderPort}}/render
+            - name: GF_RENDERING_CALLBACK_URL
+              value: http://{{ include "grafana.grafanaFullname" . }}.{{ .Release.Namespace}}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.server.httpListenPort}}/
+            - name: GF_LOG_FILTERS
+              value: rendering:debug
+            {{- end }}
             {{- toYaml .Values.grafana.env | nindent 12 }}
-          {{- end }}
           {{- with .Values.grafana.lifecycle }}
           lifecycle:
             {{- toYaml . | nindent 12 }}

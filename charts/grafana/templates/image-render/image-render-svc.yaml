@@ -1,0 +1,23 @@
+{{ if .Values.image_render.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "grafana.imageRenderFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "grafana.imageRenderLabels" . | nindent 4 }}
+    {{- with .Values.image_render.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- toYaml .Values.image_render.service.annotations | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.config.server.imageRenderPort }}
+      protocol: TCP
+      name: http-metrics
+      targetPort: http-metrics
+  selector:
+    {{- include "grafana.imageRenderSelectorLabels" . | nindent 4 }}
+{{- end -}}
