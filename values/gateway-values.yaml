@@ -83,17 +83,17 @@ config:
 
       # Metric Section
       location ~ /api/(v1|prom)/push {
-        proxy_pass http://cortex-write.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
+        proxy_pass http://cortex-instance.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
       }
       location ~ /api/(v1|prom)/(rules|alerts).* {
-        proxy_pass http://cortex-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
+        proxy_pass http://cortex-instance.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
       }
       location ~ /api/(v1|prom)/.* {
-        proxy_pass http://cortex-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
+        proxy_pass http://cortex-instance.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
       }
 
       location /distributor/ {
-        proxy_pass http://cortex-write.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080/;
+        proxy_pass http://cortex-instance.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080/;
       }
       # Metric Section
       }

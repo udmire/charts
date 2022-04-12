@@ -24,3 +24,9 @@ data:
 
     # custom ini section
     {{- include "ContentRender" ( dict "value" .Values.config.customIni "context" . ) | nindent 4 }}
+
+    {{- if .Values.image_render.enabled }}
+    [rendering]
+    server_url = http://{{ include "grafana.imageRenderFullname" . }}.{{ .Release.Namespace}}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.server.imageRenderPort}}/render
+    callback_url = http://{{ include "grafana.grafanaFullname" . }}.{{ .Release.Namespace}}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.server.httpListenPort}}/
+    {{- end }}

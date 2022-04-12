@@ -9,6 +9,12 @@ global:
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
       tag: "8.4.3"
+    imageRender:
+      registry: ""
+      repository: grafana/grafana-image-renderer
+      pullPolicy: IfNotPresent
+      # Overrides the image tag whose default is the chart appVersion.
+      tag: "3.4.2"
   # -- Kubernetes cluster DNS domain
   clusterDomain: cluster.local
 
@@ -24,25 +30,10 @@ serviceAccount:
 config:
   server: 
     httpListenPort: 3000
+    imageRenderPort: 8081
   datasources: []
   dashboards: []
   customIni: ""
-
-ingress:
-  enabled: false
-  className: ""
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: chart-example.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
 
 grafana:
   enabled: true
@@ -75,7 +66,7 @@ grafana:
   # -- Pod Annotations
   podAnnotations:
     prometheus.io/scrape: 'true'
-    prometheus.io/port: '8080'
+    prometheus.io/port: '{{ .Values.config.server.httpListenPort }}'
 
   nodeSelector: {}
   affinity:
@@ -133,6 +124,91 @@ grafana:
       maxUnavailable: 1
 
   terminationGracePeriodSeconds: 60
+
+  tolerations: []
+
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraPorts: []
+  env: []
+  lifecycle: {}
+
+image_render:
+  enabled: true
+  replicas: 1
+
+  service:
+    annotations: {}
+    labels: {}
+
+  serviceAccount:
+    # -- "" disables the individual serviceAccount and uses the global serviceAccount for that component
+    name: ""
+
+  resources: {}
+
+  # -- Additional Cortex container arguments, e.g. log.level (debug, info, warn, error)
+  extraArgs: {}
+
+  # -- Pod Labels
+  podLabels: {}
+
+  # -- Pod Annotations
+  podAnnotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '{{ .Values.config.server.imageRenderPort }}'
+
+  nodeSelector: {}
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                    - image-render
+            topologyKey: 'kubernetes.io/hostname'
+
+  annotations: {}
+
+  startupProbe:
+    httpGet:
+      path: /
+      port: http-metrics
+    failureThreshold: 10
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http-metrics
+  readinessProbe:
+    httpGet:
+      path: /
+      port: http-metrics
+
+  securityContext: {}
+
+  containerSecurityContext:
+    enabled: false
+    capabilities:
+      drop: ['all']
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+
+  terminationGracePeriodSeconds: 10
 
   tolerations: []
 
