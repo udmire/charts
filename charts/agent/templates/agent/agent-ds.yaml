@@ -53,6 +53,7 @@ spec:
             {{- if .Values.agent.extraVolumeMounts }}
             {{- toYaml .Values.agent.extraVolumeMounts | nindent 12}}
             {{- end }}
+            {{- include "agent.integrationVolumeMounts" . | nindent 12 }}
             - mountPath: /etc/agent
               name: {{ template "agent.agentFullname" . }}-config
           ports:
@@ -88,6 +89,7 @@ spec:
         {{- end }}
       volumes:
         {{- include "agent.agentConfigVolume" . | nindent 8 }}
+        {{- include "agent.integrationVolumes" . | nindent 8 }}
         {{- if .Values.agent.extraVolumes }}
         {{- toYaml .Values.agent.extraVolumes | nindent 8}}
         {{- end }}

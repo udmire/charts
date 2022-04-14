@@ -21,6 +21,8 @@ config:
         format: otlp
         headers:
           x-scope-orgid: 1
+  integrations:
+    nodeExporter: true
         
 agent:
   hostNetwork: false

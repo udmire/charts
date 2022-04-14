@@ -39,7 +39,7 @@ config:
       # url: http://_http-metrics._tcp.{{ .Release.Name }}-alertmanager.{{ .Release.Namespace }}-common/alertmanager/
       external_url: https://alertmanager.xx
   targets:
-    read: query-frontend,querier,ruler,compactor
+    read: query-scheduler,query-frontend,querier,ruler,compactor
     write: distributor,ingester
 
 write:
