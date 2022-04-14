@@ -1,0 +1,14 @@
+{{- if and (gt (int .Values.alertmanager.replicas) 1) (.Values.alertmanager.podDisruptionBudget) }}
+apiVersion: {{ include "PdbVersion" . }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "alertmanager.alertmanagerFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alertmanager.alertmanagerLabels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "alertmanager.alertmanagerSelectorLabels" . | nindent 6 }}
+  {{- toYaml .Values.alertmanager.podDisruptionBudget | nindent 2 }}
+{{- end }}

@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "alertmanager.fullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alertmanager.labels" . | nindent 4 }}
+data:
+  alertmanager.yaml: |-
+    multitenancy_enabled: true
+    server:
+      http_listen_port: {{ .Values.config.server.httpListenPort }}
+      grpc_listen_port: {{ .Values.config.server.grpcListenPort }}
+      grpc_server_max_recv_msg_size: 104857600
+      grpc_server_max_send_msg_size: 104857600
+      grpc_server_max_concurrent_streams: 100000
+    memberlist:
+      bind_port: {{ .Values.config.memberlist.bindPort }}
+      # -- the service name of the memberlist
+      # if using memberlist discovery
+      join_members:
+        - {{ include "alertmanager.fullname" . }}-memberlist.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.memberlist.bindPort }}
+      max_join_backoff: 1m
+      max_join_retries: 10
+      min_join_backoff: 1s
+      gossip_to_dead_nodes_time: 1h
+    alertmanager:
+      data_dir: /data/alertmanager
+      enable_api: true
+      external_url: /alertmanager
+      sharding_ring:
+        kvstore:
+          store: memberlist
+          prefix: alertmanager/
+      fallback_config_file: /etc/alertmanager/default_conf.yaml
+    alertmanager_storage:
+      {{- if .Values.global.storage.backend }}
+      backend: {{.Values.global.storage.backend}}
+      {{- if eq .Values.global.storage.backend "s3"}}
+      s3:
+        endpoint: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.endpoint "context" . ) }}
+        bucket_name: {{ include "ContentRender" ( dict "value" .Values.global.storage.buckets.alertData "context" . ) }}
+        access_key_id: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.accessKey "context" . ) }}
+        secret_access_key: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.secretKey "context" . ) }}
+        insecure: {{ default true .Values.global.storage.s3.insecure }}
+        http:
+          insecure_skip_verify: true
+      {{- end }}
+      {{- else if .Values.minio.enabled }}
+      backend: s3
+      s3:
+        endpoint: {{ .Release.Name }}-minio.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:9000
+        {{- with (index .Values.minio.buckets 0) }}
+        bucket_name: {{ .name }}
+        {{- end }}
+        access_key_id: {{ .Values.minio.accessKey }}
+        secret_access_key: {{ .Values.minio.secretKey }}
+        insecure: true
+        http:
+          insecure_skip_verify: true
+      {{- else }}
+      backend: filesystem
+      filesystem:
+        dir: /data/rules
+      {{- end }}
+    activity_tracker:
+      filepath: /data/active-query-tracker.log
+    
+  runtime_config.yaml: |-
+    overrides: {}
+  default_conf.yaml: |-
+    route:
+      receiver: 'default-receiver'
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 6h
+    receivers:
+      - name: default-receiver
+        {{- if .Values.config.defaultReceivers -}}
+        {{- include "ContentRender" ( dict "value" .Values.config.defaultReceivers "context" . ) | nindent 8 }}
+        {{- end -}}

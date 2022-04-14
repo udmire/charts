@@ -1,0 +1,258 @@
+global:
+  image:
+    mimir:
+      registry: ""
+      repository: grafana/mimir
+      tag: 2.0.0
+      pullPolicy: IfNotPresent
+  clusterDomain: cluster.local
+  storage:
+    buckets:
+      metricData: &metricDataBucket "metric-data"
+      metricRule: &metricRuleBucket "metric-rule"
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+nameOverride: "mimir"
+fullnameOverride: ""
+
+config:
+  server: 
+    httpListenPort: 8080
+    grpcListenPort: 9095
+  memberlist:
+    bindPort: 7946
+  ruler:
+    alertmanager:
+      alertmanager_url: https://alertmanager.xx
+      # url: http://_http-metrics._tcp.{{ .Release.Name }}-alertmanager.{{ .Release.Namespace }}-common/alertmanager/
+      external_url: https://alertmanager.xx
+
+instance:
+  replicas: 3
+
+  statefulSet:
+    podManagementPolicy: OrderedReady
+
+  service:
+    annotations: {}
+    labels: {}
+
+  serviceAccount:
+    name:
+
+  serviceMonitor:
+    enabled: false
+    additionalLabels: {}
+    relabelings: []
+    metricRelabelings: []
+    # -- Additional endpoint configuration https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
+    extraEndpointSpec: {}
+
+  resources: {}
+
+  extraArgs: {}
+
+  podLabels: {}
+
+  podAnnotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '{{ .Values.config.server.httpListenPorts }}'
+
+  nodeSelector: {}
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                    - instance
+            topologyKey: 'kubernetes.io/hostname'
+
+  annotations: {}
+
+  autoscaling:
+    enabled: false
+    minReplicas: 3
+    maxReplicas: 30
+    targetMemoryUtilizationPercentage: 80
+    behavior:
+      scaleDown:
+        policies:
+          - type: Pods
+            value: 1
+            periodSeconds: 1800
+        stabilizationWindowSeconds: 3600
+      scaleUp:
+        policies:
+          - type: Pods
+            value: 1
+            periodSeconds: 1800
+
+  lifecycle:
+    preStop:
+      httpGet:
+        path: "/ingester/shutdown"
+        port: http-metrics
+
+  persistentVolume:
+    enabled: true
+    annotations: {}
+
+    accessModes:
+      - ReadWriteOnce
+
+    size: 2Gi
+
+    subPath: ''
+
+    storageClass: null
+
+  startupProbe: {}
+
+  livenessProbe: {}
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+
+  securityContext: {}
+
+  containerSecurityContext:
+    enabled: true
+    readOnlyRootFilesystem: true
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  statefulStrategy:
+    type: RollingUpdate
+
+  terminationGracePeriodSeconds: 60
+
+  tolerations: []
+
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  extraPorts: []
+  env: []
+
+memcached-frontend:
+  enabled: false
+  replicas: 2
+  resources: {}
+  env:
+    # -- MEMCACHED_CACHE_SIZE is the amount of memory allocated to memcached for object storage
+    - name: MEMCACHED_CACHE_SIZE
+      value: "1024"
+    # -- MEMCACHED_MAX_CONNECTIONS is the maximum number of simultaneous connections to the memcached service
+    - name: MEMCACHED_MAX_CONNECTIONS
+      value: "1024"
+    # -- MEMCACHED_THREADS is the number of threads to use when processing incoming requests.
+    # By default, memcached is configured to use 4 concurrent threads. The threading improves the performance of
+    # storing and retrieving data in the cache, using a locking system to prevent different threads overwriting or updating the same values.
+    - name: MEMCACHED_THREADS
+      value: "4"
+  metrics:
+    enabled: true
+  serviceMonitor:
+    enabled: false
+
+memcached-blocks-index:
+  enabled: true
+  replicas: 2
+  resources: {}
+  env:
+    # -- MEMCACHED_CACHE_SIZE is the amount of memory allocated to memcached for object storage
+    - name: MEMCACHED_CACHE_SIZE
+      value: "1024"
+    # -- MEMCACHED_MAX_CONNECTIONS is the maximum number of simultaneous connections to the memcached service
+    - name: MEMCACHED_MAX_CONNECTIONS
+      value: "1024"
+    # -- MEMCACHED_THREADS is the number of threads to use when processing incoming requests.
+    # By default, memcached is configured to use 4 concurrent threads. The threading improves the performance of
+    # storing and retrieving data in the cache, using a locking system to prevent different threads overwriting or updating the same values.
+    - name: MEMCACHED_THREADS
+      value: "4"
+  metrics:
+    enabled: true
+  serviceMonitor:
+    enabled: false
+
+memcached-blocks-chunk:
+  enabled: true
+  replicas: 2
+  resources: {}
+  env:
+    # -- MEMCACHED_CACHE_SIZE is the amount of memory allocated to memcached for object storage
+    - name: MEMCACHED_CACHE_SIZE
+      value: "1024"
+    # -- MEMCACHED_MAX_CONNECTIONS is the maximum number of simultaneous connections to the memcached service
+    - name: MEMCACHED_MAX_CONNECTIONS
+      value: "1024"
+    # -- MEMCACHED_THREADS is the number of threads to use when processing incoming requests.
+    # By default, memcached is configured to use 4 concurrent threads. The threading improves the performance of
+    # storing and retrieving data in the cache, using a locking system to prevent different threads overwriting or updating the same values.
+    - name: MEMCACHED_THREADS
+      value: "4"
+  metrics:
+    enabled: true
+  serviceMonitor:
+    enabled: false
+
+memcached-blocks-metadata:
+  enabled: true
+  replicas: 2
+  resources: {}
+  env:
+    # -- MEMCACHED_CACHE_SIZE is the amount of memory allocated to memcached for object storage
+    - name: MEMCACHED_CACHE_SIZE
+      value: "1024"
+    # -- MEMCACHED_MAX_CONNECTIONS is the maximum number of simultaneous connections to the memcached service
+    - name: MEMCACHED_MAX_CONNECTIONS
+      value: "1024"
+    # -- MEMCACHED_THREADS is the number of threads to use when processing incoming requests.
+    # By default, memcached is configured to use 4 concurrent threads. The threading improves the performance of
+    # storing and retrieving data in the cache, using a locking system to prevent different threads overwriting or updating the same values.
+    - name: MEMCACHED_THREADS
+      value: "4"
+  metrics:
+    enabled: true
+  serviceMonitor:
+    enabled: false
+
+minio:
+  enabled: true
+  accessKey: metrics
+  secretKey: supersecret
+  buckets:
+    - name: *metricDataBucket
+      policy: none
+      purge: false
+    - name: *metricRuleBucket
+      policy: none
+      purge: false
+  persistence:
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi

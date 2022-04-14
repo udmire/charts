@@ -1,0 +1,14 @@
+{{- if and (gt (int .Values.compactor.replicas) 1) (.Values.compactor.podDisruptionBudget) }}
+apiVersion: {{ include "PdbVersion" . }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "mimir.compactorFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mimir.compactorLabels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "mimir.compactorSelectorLabels" . | nindent 6 }}
+  {{- toYaml .Values.compactor.podDisruptionBudget | nindent 2 }}
+{{- end }}

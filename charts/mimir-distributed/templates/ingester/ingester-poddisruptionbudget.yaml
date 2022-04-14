@@ -1,0 +1,14 @@
+{{- if and (gt (int .Values.ingester.replicas) 1) (.Values.ingester.podDisruptionBudget) (.Values.ingester.enabled) }}
+apiVersion: {{ include "PdbVersion" . }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "mimir.ingesterFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mimir.ingesterLabels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "mimir.ingesterSelectorLabels" . | nindent 6 }}
+  {{- toYaml .Values.ingester.podDisruptionBudget | nindent 2 }}
+{{- end }}

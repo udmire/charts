@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "alertmanager.alertmanagerFullname" . }}-headless
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alertmanager.alertmanagerLabels" . | nindent 4 }}
+    {{- with .Values.alertmanager.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- toYaml .Values.alertmanager.service.annotations | nindent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+    - port: {{ .Values.config.server.httpListenPort }}
+      protocol: TCP
+      name: http-metrics
+      targetPort: http-metrics
+  selector:
+    {{- include "alertmanager.alertmanagerSelectorLabels" . | nindent 4 }}

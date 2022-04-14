@@ -1,0 +1,14 @@
+{{- if and (gt (int .Values.instance.replicas) 1) (.Values.instance.podDisruptionBudget) }}
+apiVersion: {{ include "PdbVersion" . }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "mimir.instanceFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mimir.instanceLabels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "mimir.instanceSelectorLabels" . | nindent 6 }}
+  {{- toYaml .Values.instance.podDisruptionBudget | nindent 2 }}
+{{- end }}
