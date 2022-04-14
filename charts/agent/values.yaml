@@ -40,6 +40,7 @@ config:
   traces:
     remoteWrites:
       - endpoint: xxx
+  integrations: {}
 agent:
   enabled: true
 

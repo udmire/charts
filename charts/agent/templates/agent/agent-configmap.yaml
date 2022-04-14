@@ -227,6 +227,10 @@ data:
                 ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
                 insecure_skip_verify: false
     {{- end }}
+    {{- if .Values.config.integrations }}
+    integrations:
+      {{- include "agent.integrationConfigs" . | nindent 6 }}
+    {{- end }}
   strategies.json: |-
     {"default_strategy": {"param": 0.001, "type": "probabilistic"}}
 {{- end }}
