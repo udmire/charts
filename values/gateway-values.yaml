@@ -10,6 +10,8 @@ config:
       - 8890
       - 8891
       - 8892
+      - 8893
+      - 8894
   serverBlocks: 
     log: |-
       resolver kube-dns.kube-system.svc.{{ .Values.global.clusterDomain }} valid=10s;
@@ -163,10 +165,69 @@ config:
 
       # Alertmanager Section
       location ~ /multitenant_alertmanager/.* {
-        proxy_pass http://alertmanager-alertmanager.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
+        proxy_pass http://alert-alertmanager-alertmanager.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
       }
       location ~ /alertmanager/.* {
-        proxy_pass http://alertmanager-alertmanager.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
+        proxy_pass http://alert-alertmanager-alertmanager.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
+      }
+      # Alertmanager Section
+      }
+
+    metric-mimir: |-
+      # Metric Section
+      server {
+      {{- with (index .Values.config.server.httpListenPorts 5) }}
+      listen {{ . }};
+      {{- end }}
+
+      set $orgId $http_x_scope_orgid;
+      if ($orgId = '') {
+        set $orgId $remote_user;
+      }
+      if ($orgId = '') {
+        set $orgId '1';
+      }
+      proxy_set_header X-Scope-OrgID $orgId;
+
+      # Metric Section
+      location ~ /api/(v1|prom)/push {
+        proxy_pass http://mimir-distributor.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
+      }
+      location ~ /api/(v1|prom)/(rules|alerts).* {
+        proxy_pass http://mimir-ruler.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
+      }
+      location ~ /api/(v1|prom)/.* {
+        proxy_pass http://mimir-query-frontend.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
+      }
+
+      location /distributor/ {
+        proxy_pass http://mimir-distributor.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080/;
+      }
+      # Metric Section
+      }
+
+    alert-mimir: |-
+      # Alertmanager Section
+      server {
+      {{- with (index .Values.config.server.httpListenPorts 6) }}
+      listen {{ . }};
+      {{- end }}
+
+      set $orgId $http_x_scope_orgid;
+      if ($orgId = '') {
+        set $orgId $remote_user;
+      }
+      if ($orgId = '') {
+        set $orgId '1';
+      }
+      proxy_set_header X-Scope-OrgID $orgId;
+
+      # Alertmanager Section
+      location ~ /multitenant_alertmanager/.* {
+        proxy_pass http://alertmimir-alertmanager-mimir-alertmanager.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
+      }
+      location ~ /alertmanager/.* {
+        proxy_pass http://alertmimir-alertmanager-mimir-alertmanager.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
       }
       # Alertmanager Section
       }

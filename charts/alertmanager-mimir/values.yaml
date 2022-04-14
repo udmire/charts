@@ -1,0 +1,168 @@
+# Default values for alertmanager.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+global:
+  image:
+    mimir:
+      registry: ""
+      repository: grafana/mimir
+      tag: 2.0.0
+      pullPolicy: IfNotPresent
+  # -- Kubernetes cluster DNS domain
+  clusterDomain: cluster.local
+  storage:
+    buckets:
+      alertData: &alertBucket "alert"
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+nameOverride: "alertmanager"
+fullnameOverride: ""
+
+config:
+  server: 
+    httpListenPort: 8080
+    grpcListenPort: 9095
+  memberlist:
+    bindPort: 7946
+  storage: {}
+  defaultReceivers: {}
+
+alertmanager:
+  enabled: true
+  replicas: 3
+
+  service:
+    annotations: {}
+    labels: {}
+
+  serviceAccount:
+    # -- "" disables the individual serviceAccount and uses the global serviceAccount for that component
+    name: ""
+
+  serviceMonitor:
+    enabled: false
+    additionalLabels: {}
+    relabelings: []
+    metricRelabelings: []
+    # -- Additional endpoint configuration https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
+    extraEndpointSpec: {}
+
+  resources: {}
+
+  # -- Additional Cortex container arguments, e.g. log level (debug, info, warn, error)
+  extraArgs: {}
+
+  # -- Pod Labels
+  podLabels: {}
+
+  # -- Pod Annotations
+  podAnnotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '{{ .Values.config.server.httpListenPort }}'
+
+  nodeSelector: {}
+  affinity: {}
+  annotations: {}
+
+  persistentVolume:
+    # -- If true and alertmanager.statefulSet.enabled is true,
+    # Alertmanager will create/use a Persistent Volume Claim
+    # If false, use emptyDir
+    enabled: true
+
+    # -- Alertmanager data Persistent Volume Claim annotations
+    annotations: {}
+
+    # -- Alertmanager data Persistent Volume access modes
+    # Must match those of existing PV or dynamic provisioner
+    # Ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+    accessModes:
+      - ReadWriteOnce
+
+    # -- Alertmanager data Persistent Volume size
+    size: 2Gi
+
+    # -- Subdirectory of Alertmanager data Persistent Volume to mount
+    # Useful if the volume's root directory is not empty
+    subPath: ''
+
+    # -- Alertmanager data Persistent Volume Storage Class
+    # If defined, storageClassName: <storageClass>
+    # If set to "-", storageClassName: "", which disables dynamic provisioning
+    # If undefined (the default) or set to null, no storageClassName spec is
+    # set, choosing the default provisioner.
+    storageClass: null
+
+  startupProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    failureThreshold: 10
+  livenessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+
+  securityContext: {}
+
+  containerSecurityContext:
+    enabled: true
+    readOnlyRootFilesystem: true
+
+  # -- Tolerations for pod assignment
+  # ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
+
+  # -- If not set then a PodDisruptionBudget will not be created
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  statefulStrategy:
+    type: RollingUpdate
+
+  terminationGracePeriodSeconds: 60
+
+  # -- Init containers to be added to the cortex pod.
+  initContainers: []
+
+  # -- Additional containers to be added to the cortex pod.
+  extraContainers: []
+
+  # -- Additional volumes to the cortex pod.
+  extraVolumes: []
+
+  # -- Extra volume mounts that will be added to the cortex container
+  extraVolumeMounts: []
+
+  # -- Additional ports to the cortex services. Useful to expose extra container ports.
+  extraPorts: []
+
+  # -- Extra env variables to pass to the cortex container
+  env: []
+
+minio:
+  enabled: true
+  accessKey: alertmanager
+  secretKey: supersecret
+  buckets:
+    - name: *alertBucket
+      policy: none
+      purge: false
+  persistence:
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi

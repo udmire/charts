@@ -8,7 +8,9 @@ config:
   metrics:
     remoteWrites:
       - name: metric
-        url: 'http://gateway-nginx-nginx.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8889/api/prom/push'    
+        url: 'http://gateway-nginx-nginx.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8889/api/prom/push'
+      - name: mimir
+        url: 'http://gateway-nginx-nginx.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8893/api/v1/push'    
   logs:
     clients: 
       - url: 'http://gateway-nginx-nginx.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8888/api/prom/push'

@@ -1,0 +1,138 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "mimir.writeFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mimir.writeLabels" . | nindent 4 }}
+    app.kubernetes.io/part-of: memberlist
+  annotations:
+    {{- toYaml .Values.write.annotations | nindent 4 }}
+spec:
+  {{- if not .Values.write.autoscaling.enabled }}
+  replicas: {{ .Values.write.replicas }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "mimir.writeSelectorLabels" . | nindent 6 }}
+  updateStrategy:
+    {{- toYaml .Values.write.statefulStrategy | nindent 4 }}          
+  podManagementPolicy: "{{ .Values.write.statefulSet.podManagementPolicy }}"
+  serviceName: {{ template "mimir.writeFullname" . }}-headless
+  {{- if .Values.write.persistentVolume.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: storage
+        {{- if .Values.write.persistentVolume.annotations }}
+        annotations:
+          {{ toYaml .Values.write.persistentVolume.annotations | nindent 10 }}
+        {{- end }}
+      spec:
+        {{- if .Values.write.persistentVolume.storageClass }}
+        {{- if (eq "-" .Values.write.persistentVolume.storageClass) }}
+        storageClassName: ""
+        {{- else }}
+        storageClassName: "{{ .Values.write.persistentVolume.storageClass }}"
+        {{- end }}
+        {{- end }}
+        accessModes:
+          {{ toYaml .Values.write.persistentVolume.accessModes | nindent 10 }}
+        resources:
+          requests:
+            storage: "{{ .Values.write.persistentVolume.size }}"
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- include "mimir.writeLabels" . | nindent 8 }}
+        app.kubernetes.io/part-of: memberlist
+        {{- with .Values.write.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        checksum/config: {{ include "mimir.configChecksum" . }}
+        {{- if .Values.write.podAnnotations }}
+        {{- include "ContentRender" ( dict "value" .Values.write.podAnnotations "context" . ) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.write.serviceAccount.name | default (include "mimir.serviceAccountName" . ) }}
+      {{- if .Values.write.priorityClassName }}
+      priorityClassName: {{ .Values.write.priorityClassName }}
+      {{- end }}
+      {{- if .Values.write.securityContext.enabled }}
+      securityContext: {{- omit .Values.write.securityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- toYaml .Values.write.initContainers | nindent 8 }}
+      nodeSelector:
+        {{- toYaml .Values.write.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.write.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.write.tolerations | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.write.terminationGracePeriodSeconds }}
+      volumes:
+        {{- include "mimir.configVolume" . | nindent 8 }}
+        {{- if not .Values.write.persistentVolume.enabled }}
+        - name: storage
+          emptyDir: {}
+        {{- end }}
+        {{- if .Values.write.extraVolumes }}
+        {{- toYaml .Values.write.extraVolumes | nindent 8 }}
+        {{- end }}
+      containers:
+        {{- if .Values.write.extraContainers }}
+        {{- toYaml .Values.write.extraContainers | nindent 8 }}
+        {{- end }}
+        - name: write
+          {{- include "Image" .Values.global.image.mimir | nindent 10 }}
+          args:
+            - "-target={{ .Values.config.targets.write }}"
+            - "-config.file=/etc/mimir/mimir.yaml"
+            {{- range $key, $value := .Values.write.extraArgs }}
+            - "-{{ $key }}={{ $value }}"
+            {{- end }}
+          volumeMounts:
+            {{- if .Values.write.extraVolumeMounts }}
+            {{- toYaml .Values.write.extraVolumeMounts | nindent 12}}
+            {{- end }}
+            - name: config
+              mountPath: /etc/mimir
+            - name: storage
+              mountPath: "/data"
+              {{- with .Values.write.persistentVolume.subPath }}
+              subPath: {{ . }}
+              {{- end }}
+          ports:
+            - name: http-metrics
+              containerPort: {{ .Values.config.server.httpListenPort }}
+              protocol: TCP
+            - name: grpc
+              containerPort: {{ .Values.config.server.grpcListenPort }}
+              protocol: TCP
+            - name: gossip
+              containerPort: {{ .Values.config.memberlist.bindPort }}
+              protocol: TCP
+          {{- if .Values.write.startupProbe }}
+          startupProbe:
+            {{- toYaml .Values.write.startupProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.write.livenessProbe }}
+          livenessProbe:
+            {{- toYaml .Values.write.livenessProbe | nindent 12 }}
+          {{- end }}
+          readinessProbe:
+            {{- toYaml .Values.write.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.write.resources | nindent 12 }}
+          {{- if .Values.write.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.write.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.write.env }}
+          env:
+            {{- toYaml .Values.write.env | nindent 12 }}
+          {{- end }}
+          {{- with .Values.write.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}

@@ -1,0 +1,42 @@
+{{- if .Values.write.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "mimir.writeFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mimir.writeLabels" . | nindent 4 }}
+    {{- if .Values.write.serviceMonitor.additionalLabels }}
+{{ toYaml .Values.write.serviceMonitor.additionalLabels | indent 4 }}
+    {{- end }}
+  {{- if .Values.write.serviceMonitor.annotations }}
+  annotations:
+{{ toYaml .Values.write.serviceMonitor.annotations | indent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "mimir.writeSelectorLabels" . | nindent 6 }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace | quote }}
+  endpoints:
+  - port: http-metrics
+    {{- if .Values.write.serviceMonitor.interval }}
+    interval: {{ .Values.write.serviceMonitor.interval }}
+    {{- end }}
+    {{- if .Values.write.serviceMonitor.scrapeTimeout }}
+    scrapeTimeout: {{ .Values.write.serviceMonitor.scrapeTimeout }}
+    {{- end }}
+    {{- if .Values.write.serviceMonitor.relabelings }}
+    relabelings:
+    {{- toYaml .Values.write.serviceMonitor.relabelings | nindent 4 }}
+    {{- end }}
+    {{- if .Values.write.serviceMonitor.metricRelabelings }}
+    metricRelabelings:
+    {{- toYaml .Values.write.serviceMonitor.metricRelabelings | nindent 4 }}
+    {{- end }}
+    {{- with .Values.write.serviceMonitor.extraEndpointSpec }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}

@@ -1,6 +1,9 @@
 global:
   # the default cluster domain suffix
   clusterDomain: &defaultClusterDomain cluster.local
+  image:
+    grafana:
+      tag: latest
 
 grafana:
   replicas: 1

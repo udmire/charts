@@ -1,0 +1,3 @@
+global:
+  # the default cluster domain suffix
+  clusterDomain: &defaultClusterDomain cluster.local

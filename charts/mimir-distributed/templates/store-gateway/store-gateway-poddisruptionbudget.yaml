@@ -1,0 +1,14 @@
+{{- if and (gt (int .Values.store_gateway.replicas) 1) (.Values.store_gateway.podDisruptionBudget) (.Values.store_gateway.enabled) }}
+apiVersion: {{ include "PdbVersion" . }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "mimir.storeGatewayFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "mimir.storeGatewayLabels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "mimir.storeGatewaySelectorLabels" . | nindent 6 }}
+  {{- toYaml .Values.store_gateway.podDisruptionBudget | nindent 2 }}
+{{- end }}

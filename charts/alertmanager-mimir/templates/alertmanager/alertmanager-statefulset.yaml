@@ -1,0 +1,118 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "alertmanager.alertmanagerFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "alertmanager.alertmanagerLabels" . | nindent 4 }}
+    app.kubernetes.io/part-of: memberlist
+  annotations:
+    {{- toYaml .Values.alertmanager.annotations | nindent 4 }}
+spec:
+  replicas: {{ .Values.alertmanager.replicas }}
+  selector:
+    matchLabels:
+      {{- include "alertmanager.alertmanagerSelectorLabels" . | nindent 6 }}
+  updateStrategy:
+    {{- toYaml .Values.alertmanager.statefulStrategy | nindent 4 }}
+  serviceName: {{ template "alertmanager.fullname" . }}-alertmanager-headless
+  volumeClaimTemplates:
+    - metadata:
+        name: storage
+        {{- if .Values.alertmanager.persistentVolume.annotations }}
+        annotations:
+          {{ toYaml .Values.alertmanager.persistentVolume.annotations | nindent 10 }}
+        {{- end }}
+      spec:
+        {{- if .Values.alertmanager.persistentVolume.storageClass }}
+        {{- if (eq "-" .Values.alertmanager.persistentVolume.storageClass) }}
+        storageClassName: ""
+        {{- else }}
+        storageClassName: "{{ .Values.alertmanager.persistentVolume.storageClass }}"
+        {{- end }}
+        {{- end }}
+        accessModes:
+          {{ toYaml .Values.alertmanager.persistentVolume.accessModes | nindent 10 }}
+        resources:
+          requests:
+            storage: "{{ .Values.alertmanager.persistentVolume.size }}"
+  template:
+    metadata:
+      labels:
+        {{- include "alertmanager.alertmanagerLabels" . | nindent 8 }}
+        app.kubernetes.io/part-of: memberlist
+        {{- with .Values.alertmanager.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        checksum/config: {{ include "alertmanager.configChecksum" . }}
+        {{- if .Values.alertmanager.podAnnotations }}
+        {{- include "ContentRender" ( dict "value" .Values.alertmanager.podAnnotations "context" . ) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.alertmanager.serviceAccount.name | default (include "alertmanager.serviceAccountName" . ) }}
+      {{- if .Values.alertmanager.priorityClassName }}
+      priorityClassName: {{ .Values.alertmanager.priorityClassName }}
+      {{- end }}
+      {{- if .Values.alertmanager.securityContext.enabled }}
+      securityContext: {{- omit .Values.alertmanager.securityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- toYaml .Values.alertmanager.initContainers | nindent 8 }}
+      nodeSelector:
+        {{- toYaml .Values.alertmanager.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.alertmanager.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.alertmanager.tolerations | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.alertmanager.terminationGracePeriodSeconds }}
+      volumes:
+        {{- include "alertmanager.configVolume" . | nindent 8 }}
+        {{- if .Values.alertmanager.extraVolumes }}
+        {{- toYaml .Values.alertmanager.extraVolumes | nindent 8 }}
+        {{- end }}
+      containers:
+        {{- if .Values.alertmanager.extraContainers }}
+        {{ toYaml .Values.alertmanager.extraContainers | nindent 8 }}
+        {{- end }}
+        - name: alertmanager
+          {{- include "Image" .Values.global.image.mimir | nindent 10 }}
+          args:
+            - "-target=alertmanager"
+            - "-config.file=/etc/alertmanager/alertmanager.yaml"
+            {{- range $key, $value := .Values.alertmanager.extraArgs }}
+            - "-{{ $key }}={{ $value }}"
+            {{- end }}
+          volumeMounts:
+            {{- if .Values.alertmanager.extraVolumeMounts }}
+            {{- toYaml .Values.alertmanager.extraVolumeMounts | nindent 12}}
+            {{- end }}
+            - name: config
+              mountPath: /etc/alertmanager/
+            - name: storage
+              mountPath: "/data"
+              {{- with .Values.alertmanager.persistentVolume.subPath }}
+              subPath: {{ . }}
+              {{- end }}
+          ports:
+            - name: http-metrics
+              containerPort: {{ .Values.config.server.httpListenPort }}
+              protocol: TCP
+            - name: gossip
+              containerPort: {{ .Values.config.memberlist.bindPort }}
+              protocol: TCP
+          startupProbe:
+            {{- toYaml .Values.alertmanager.startupProbe | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.alertmanager.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.alertmanager.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.alertmanager.resources | nindent 12 }}
+          {{- if .Values.alertmanager.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.alertmanager.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.alertmanager.env }}
+          env:
+            {{- toYaml .Values.alertmanager.env | nindent 12 }}
+          {{- end }}
