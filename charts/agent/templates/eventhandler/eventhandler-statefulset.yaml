@@ -1,0 +1,119 @@
+{{- if .Values.eventhandler.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "agent.eventhandlerFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "agent.eventhandlerLabels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.eventhandler.annotations | nindent 4 }}
+spec:
+  replicas: {{ .Values.eventhandler.replicas }}
+  selector:
+    matchLabels:
+      {{- include "agent.eventhandlerSelectorLabels" . | nindent 6 }}
+  updateStrategy:
+    {{- toYaml .Values.eventhandler.statefulStrategy | nindent 4 }}
+  serviceName: {{ template "agent.eventhandlerFullname" . }}
+  volumeClaimTemplates:
+    - metadata:
+        name: storage
+        {{- if .Values.eventhandler.persistentVolume.annotations }}
+        annotations:
+          {{ toYaml .Values.eventhandler.persistentVolume.annotations | nindent 10 }}
+        {{- end }}
+      spec:
+        {{- if .Values.eventhandler.persistentVolume.storageClass }}
+        {{- if (eq "-" .Values.eventhandler.persistentVolume.storageClass) }}
+        storageClassName: ""
+        {{- else }}
+        storageClassName: "{{ .Values.eventhandler.persistentVolume.storageClass }}"
+        {{- end }}
+        {{- end }}
+        accessModes:
+          {{ toYaml .Values.eventhandler.persistentVolume.accessModes | nindent 10 }}
+        resources:
+          requests:
+            storage: "{{ .Values.eventhandler.persistentVolume.size }}"
+  template:
+    metadata:
+      labels:
+        {{- include "agent.eventhandlerLabels" . | nindent 8 }}
+        {{- with .Values.eventhandler.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        checksum/config: {{ include "agent.eventhandlerConfigChecksum" . }}
+        {{- if .Values.eventhandler.podAnnotations }}
+        {{- include "ContentRender" ( dict "value" .Values.eventhandler.podAnnotations "context" . ) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.eventhandler.serviceAccount.name | default (include "agent.serviceAccountName" . ) }}
+      {{- if .Values.eventhandler.priorityClassName }}
+      priorityClassName: {{ .Values.eventhandler.priorityClassName }}
+      {{- end }}
+      {{- if .Values.eventhandler.securityContext.enabled }}
+      securityContext: {{- omit .Values.eventhandler.securityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- toYaml .Values.eventhandler.initContainers | nindent 8 }}
+      nodeSelector:
+        {{- toYaml .Values.eventhandler.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.eventhandler.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.eventhandler.tolerations | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.eventhandler.terminationGracePeriodSeconds }}
+      volumes:
+        {{- include "agent.eventhandlerConfigVolume" . | nindent 8 }}
+        {{- if .Values.eventhandler.extraVolumes }}
+        {{- toYaml .Values.eventhandler.extraVolumes | nindent 8 }}
+        {{- end }}
+      containers:
+        {{- if .Values.eventhandler.extraContainers }}
+        {{ toYaml .Values.eventhandler.extraContainers | nindent 8 }}
+        {{- end }}
+        - name: agent
+          {{- include "Image" .Values.global.image.agent | nindent 10 }}
+          args:
+            - "-config.file=/etc/agent/agent.yml"
+            - "-enable-features=integrations-next"
+            {{- range $key, $value := .Values.eventhandler.extraArgs }}
+            - "-{{ $key }}={{ $value }}"
+            {{- end }}
+          volumeMounts:
+            {{- if .Values.eventhandler.extraVolumeMounts }}
+            {{- toYaml .Values.eventhandler.extraVolumeMounts | nindent 12}}
+            {{- end }}
+            - name: {{ template "agent.eventhandlerFullname" . }}-config
+              mountPath: /etc/agent/
+            - name: storage
+              mountPath: /data
+              {{- with .Values.eventhandler.persistentVolume.subPath }}
+              subPath: {{ . }}
+              {{- end }}
+          ports:
+            - name: http-metrics
+              containerPort: {{ .Values.config.server.httpListenPort }}
+              protocol: TCP
+          startupProbe:
+            {{- toYaml .Values.eventhandler.startupProbe | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.eventhandler.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.eventhandler.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.eventhandler.resources | nindent 12 }}
+          {{- if .Values.eventhandler.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.eventhandler.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          env:
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            {{- if .Values.eventhandler.env }}
+              {{- toYaml .Values.eventhandler.env | nindent 12 }}
+            {{- end }}
+{{- end }}

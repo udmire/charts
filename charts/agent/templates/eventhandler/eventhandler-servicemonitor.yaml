@@ -1,0 +1,42 @@
+{{- if and .Values.eventhandler.enabled .Values.eventhandler.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "agent.eventhandlerFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "agent.eventhandlerLabels" . | nindent 4 }}
+    {{- if .Values.eventhandler.serviceMonitor.additionalLabels }}
+{{ toYaml .Values.eventhandler.serviceMonitor.additionalLabels | indent 4 }}
+    {{- end }}
+  {{- if .Values.eventhandler.serviceMonitor.annotations }}
+  annotations:
+{{ toYaml .Values.eventhandler.serviceMonitor.annotations | indent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "agent.eventhandlerSelectorLabels" . | nindent 6 }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace | quote }}
+  endpoints:
+  - port: http-metrics
+    {{- if .Values.eventhandler.serviceMonitor.interval }}
+    interval: {{ .Values.eventhandler.serviceMonitor.interval }}
+    {{- end }}
+    {{- if .Values.eventhandler.serviceMonitor.scrapeTimeout }}
+    scrapeTimeout: {{ .Values.eventhandler.serviceMonitor.scrapeTimeout }}
+    {{- end }}
+    {{- if .Values.eventhandler.serviceMonitor.relabelings }}
+    relabelings:
+    {{- toYaml .Values.eventhandler.serviceMonitor.relabelings | nindent 4 }}
+    {{- end }}
+    {{- if .Values.eventhandler.serviceMonitor.metricRelabelings }}
+    metricRelabelings:
+    {{- toYaml .Values.eventhandler.serviceMonitor.metricRelabelings | nindent 4 }}
+    {{- end }}
+    {{- with .Values.eventhandler.serviceMonitor.extraEndpointSpec }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}
