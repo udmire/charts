@@ -15,10 +15,12 @@ data:
       ring:
         kvstore:
           store: memberlist
+          prefix: traces/compactor/
     distributor:
       ring:
         kvstore:
           store: memberlist
+          prefix: traces/distributor/
       receivers: 
         {{- if  or (.Values.config.traces.jaeger.thriftCompact) (.Values.config.traces.jaeger.thriftBinary) (.Values.config.traces.jaeger.thriftHttp) (.Values.config.traces.jaeger.thriftGrpc) }}
         jaeger:
@@ -66,6 +68,7 @@ data:
           replication_factor: 3
           kvstore:
             store: memberlist
+            prefix: traces/ingester/
     memberlist:
       abort_if_cluster_join_fails: false
       bind_port: {{ .Values.config.memberlist.bindPort }}
@@ -119,7 +122,7 @@ data:
         {{- end }}
     querier:
       frontend_worker:
-        frontend_address: {{ template "tempo.fullname" . }}-query-frontend-headless.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.server.grpcListenPort }}
+        frontend_address: {{ template "tempo.fullname" . }}-instance-headless.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.server.grpcListenPort }}
 
 ---
 apiVersion: v1

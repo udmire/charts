@@ -16,3 +16,10 @@ spec:
                 name: grafana-grafana
                 port:
                   number: 3000
+          - pathType: Prefix
+            path: /api/live
+            backend:
+              service:
+                name: grafana-grafana
+                port:
+                  number: 3000

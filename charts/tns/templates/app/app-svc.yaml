@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "tns.appFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tns.appLabels" . | nindent 4 }}
+    {{- with .Values.app.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- toYaml .Values.app.service.annotations | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      protocol: TCP
+      name: http-metrics
+      targetPort: http-metrics
+  selector:
+    {{- include "tns.appSelectorLabels" . | nindent 4 }}

@@ -39,9 +39,10 @@ config:
         proxy_pass http://loki-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
+        proxy_set_header X-Scope-OrgID $orgId;
       }
       location ~ /loki/api/v1/rules.* {
-        proxy_pass http://loki-read.{{ .Release.Name }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
+        proxy_pass http://loki-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
       }
       location ~ /loki/api/.* {
         proxy_pass http://loki-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
@@ -53,6 +54,7 @@ config:
         proxy_pass http://loki-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
+        proxy_set_header X-Scope-OrgID $orgId;
       }
       location ~ /api/prom/rules.* {
         proxy_pass http://loki-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;

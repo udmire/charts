@@ -1,0 +1,138 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "tempo.fullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tempo.labels" . | nindent 4 }}
+data:
+  tempo.yaml: |-
+    multitenancy_enabled: true
+    search_enabled: true
+    compactor:
+      compaction:
+        block_retention: 48h
+      ring:
+        kvstore:
+          store: memberlist
+    distributor:
+      ring:
+        kvstore:
+          store: memberlist
+      receivers: 
+        {{- if  or (.Values.config.traces.jaeger.thriftCompact) (.Values.config.traces.jaeger.thriftBinary) (.Values.config.traces.jaeger.thriftHttp) (.Values.config.traces.jaeger.thriftGrpc) }}
+        jaeger:
+          protocols:
+            {{- if .Values.config.traces.jaeger.thriftCompact }}
+            thrift_compact:
+              endpoint: 0.0.0.0:6831
+            {{- end }}
+            {{- if .Values.config.traces.jaeger.thriftBinary }}
+            thrift_binary:
+              endpoint: 0.0.0.0:6832
+            {{- end }}
+            {{- if .Values.config.traces.jaeger.thriftHttp }}
+            thrift_http:
+              endpoint: 0.0.0.0:14268
+            {{- end }}
+            {{- if .Values.config.traces.jaeger.thriftGrpc }}
+            grpc:
+              endpoint: 0.0.0.0:14250
+            {{- end }}
+        {{- end }}
+        {{- if .Values.config.traces.zipkin }}
+        zipkin:
+          endpoint: 0.0.0.0:9411
+        {{- end }}
+        {{- if or (.Values.config.traces.otlp.http) (.Values.config.traces.otlp.grpc) }}
+        otlp:
+          protocols:
+            {{- if .Values.config.traces.otlp.http }}
+            http:
+              endpoint: 0.0.0.0:4318
+            {{- end }}
+            {{- if .Values.config.traces.otlp.grpc }}
+            grpc:
+              endpoint: 0.0.0.0:4317
+            {{- end }}
+        {{- end }}
+        {{- if .Values.config.traces.opencensus }}
+        opencensus:
+          endpoint: 0.0.0.0:55678
+        {{- end }}
+    ingester:
+      lifecycler:
+        ring:
+          replication_factor: 3
+          kvstore:
+            store: memberlist
+    memberlist:
+      abort_if_cluster_join_fails: false
+      bind_port: {{ .Values.config.memberlist.bindPort }}
+      join_members:
+        - {{ include "tempo.fullname" . }}-memberlist.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.memberlist.bindPort }}
+      max_join_backoff: 1m
+      max_join_retries: 10
+      min_join_backoff: 1s
+      gossip_to_dead_nodes_time: 1h
+    overrides:
+      per_tenant_override_config: /etc/tempo/runtime/runtime_config.yaml
+    server:
+      http_listen_port: {{ .Values.config.server.httpListenPort }}
+      grpc_listen_port: {{ .Values.config.server.grpcListenPort }}
+      grpc_server_max_recv_msg_size: 104857600
+      grpc_server_max_send_msg_size: 104857600
+      grpc_server_max_concurrent_streams: 100000
+    storage: 
+      trace: 
+        local:
+          path: /data/traces
+        wal:
+          path: /data/wal
+        {{- if .Values.memcached.enabled }}
+        cache: memcached
+        memcached:
+          addresses: dns+{{ template "tempo.memcached" . }}.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:11211
+        {{- end }}
+        {{ if .Values.global.storage.backend }}
+        backend: {{.Values.global.storage.backend}}
+        {{- if eq .Values.global.storage.backend "s3"}}
+        s3:
+          insecure: {{ default true .Values.global.storage.s3.insecure }}
+          endpoint: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.endpoint "context" . ) }}
+          bucket: {{ include "ContentRender" ( dict "value" .Values.global.storage.buckets.traceData "context" . ) }}
+          access_key: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.accessKey "context" . ) }}
+          secret_key: {{ include "ContentRender" ( dict "value" .Values.global.storage.s3.secretKey "context" . ) }}
+        {{- end }}
+        {{- else if .Values.minio.enabled }}
+        backend: s3
+        s3:
+          insecure: true
+          endpoint: {{ template "tempo.minio" . }}.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:9000
+          {{- with (index .Values.minio.buckets 0) }}
+          bucket: {{ .name }}
+          {{- end }}
+          access_key: {{ .Values.minio.accessKey }}
+          secret_key: {{ .Values.minio.secretKey }}
+        {{- else }}
+        backend: local
+        {{- end }}
+    querier:
+      frontend_worker:
+        frontend_address: {{ template "tempo.fullname" . }}-query-frontend-headless.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.server.grpcListenPort }}
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "tempo.fullname" . }}-runtime-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tempo.labels" . | nindent 4 }}
+  {{- with .annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+data:
+  runtime_config.yaml: |
+    {{- tpl (toYaml .runtime_config) . | nindent 4 }}
