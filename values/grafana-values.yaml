@@ -4,7 +4,6 @@ global:
   image:
     grafana:
       tag: 8.5.0
-
 grafana:
   replicas: 1
   env:
