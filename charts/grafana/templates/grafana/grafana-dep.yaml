@@ -83,6 +83,8 @@ spec:
               value: http://{{ include "grafana.imageRenderFullname" . }}.{{ .Release.Namespace}}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.server.imageRenderPort}}/render
             - name: GF_RENDERING_CALLBACK_URL
               value: http://{{ include "grafana.grafanaFullname" . }}.{{ .Release.Namespace}}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.server.httpListenPort}}/
+            - name: GF_LOG_FILTERS
+              value: rendering:debug
             {{- end }}
             {{- toYaml .Values.grafana.env | nindent 12 }}
           {{- with .Values.grafana.lifecycle }}
