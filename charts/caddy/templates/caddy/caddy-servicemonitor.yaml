@@ -1,0 +1,42 @@
+{{- if .Values.caddy.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "caddy.caddyFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "caddy.caddyLabels" . | nindent 4 }}
+    {{- if .Values.caddy.serviceMonitor.additionalLabels }}
+{{ toYaml .Values.caddy.serviceMonitor.additionalLabels | indent 4 }}
+    {{- end }}
+  {{- if .Values.caddy.serviceMonitor.annotations }}
+  annotations:
+{{ toYaml .Values.caddy.serviceMonitor.annotations | indent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "caddy.caddySelectorLabels" . | nindent 6 }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace | quote }}
+  endpoints:
+  - port: http-metrics
+    {{- if .Values.caddy.serviceMonitor.interval }}
+    interval: {{ .Values.caddy.serviceMonitor.interval }}
+    {{- end }}
+    {{- if .Values.caddy.serviceMonitor.scrapeTimeout }}
+    scrapeTimeout: {{ .Values.caddy.serviceMonitor.scrapeTimeout }}
+    {{- end }}
+    {{- if .Values.caddy.serviceMonitor.relabelings }}
+    relabelings:
+    {{- toYaml .Values.caddy.serviceMonitor.relabelings | nindent 4 }}
+    {{- end }}
+    {{- if .Values.caddy.serviceMonitor.metricRelabelings }}
+    metricRelabelings:
+    {{- toYaml .Values.caddy.serviceMonitor.metricRelabelings | nindent 4 }}
+    {{- end }}
+    {{- with .Values.caddy.serviceMonitor.extraEndpointSpec }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}

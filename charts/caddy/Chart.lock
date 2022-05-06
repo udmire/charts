@@ -1,0 +1,6 @@
+dependencies:
+- name: common
+  repository: http://charts.udmire.cn/
+  version: 0.1.0
+digest: sha256:ad483c6224f550ca6a24c8d1056d59b31fb0b77fad8a57f91f0f66d1d7de68dc
+generated: "2022-04-19T18:18:22.221890979+08:00"

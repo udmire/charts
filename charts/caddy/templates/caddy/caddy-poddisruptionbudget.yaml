@@ -1,0 +1,14 @@
+{{- if and (gt (int .Values.caddy.replicas) 1) (.Values.caddy.podDisruptionBudget) }}
+apiVersion: {{ include "PdbVersion" . }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "caddy.caddyFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "caddy.caddyLabels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "caddy.caddySelectorLabels" . | nindent 6 }}
+  {{- toYaml .Values.caddy.podDisruptionBudget | nindent 2 }}
+{{- end }}

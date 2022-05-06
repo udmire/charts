@@ -14,7 +14,10 @@ metadata:
 spec:
   type: ClusterIP
   clusterIP: None
+<<<<<<< HEAD
 
+=======
+>>>>>>> 43fac10... xxx
   publishNotReadyAddresses: true
   ports:
     - port: {{ .Values.config.server.grpcListenPort }}
