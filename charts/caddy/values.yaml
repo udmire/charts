@@ -1,0 +1,135 @@
+global:
+  image:
+    caddy:
+      registry: ""
+      repository: caddy
+      tag: 2.4.6
+      pullPolicy: IfNotPresent
+config:
+  server:
+    httpListenPorts: 
+      - 8081
+  serverBlocks: {}
+    # name: |
+    #   {{- with (index .Values.config.server.httpListenPorts 0) }}
+    #   :{{ . }} {
+    #     respond /live 200
+    #     respond /ready 200
+    #   }
+    #   {{- end }}
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+caddy:
+  replicas: 1
+
+  service:
+    annotations: {}
+    labels: {}
+
+  serviceAccount:
+    name:
+
+  serviceMonitor:
+    enabled: false
+    additionalLabels: {}
+    relabelings: []
+    metricRelabelings: []
+    # -- Additional endpoint configuration https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
+    extraEndpointSpec: {}
+
+  resources: {}
+
+  # -- Additional Cortex container arguments, e.g. log.level (debug, info, warn, error)
+  extraArgs: {}
+
+  # -- Pod Labels
+  podLabels: {}
+
+  # -- Pod Annotations
+  podAnnotations: {}
+
+  nodeSelector: {}
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                    - memcached
+            topologyKey: 'kubernetes.io/hostname'
+
+  annotations: {}
+
+  autoscaling:
+    enabled: false
+    minReplicas: 3
+    maxReplicas: 30
+    targetMemoryUtilizationPercentage: 80
+    behavior:
+      scaleDown:
+        policies:
+          - type: Pods
+            value: 1
+            periodSeconds: 1800
+        stabilizationWindowSeconds: 3600
+      scaleUp:
+        policies:
+          - type: Pods
+            value: 1
+            periodSeconds: 1800
+
+  startupProbe: 
+    httpGet:
+      path: /ready
+      port: 8080
+      scheme: HTTP
+  livenessProbe:
+    httpGet:
+      path: /live
+      port: 8080
+      scheme: HTTP
+  readinessProbe: 
+    httpGet:
+      path: /ready
+      port: 8080
+      scheme: HTTP
+
+  securityContext: {}
+
+  containerSecurityContext:
+    enabled: false
+    readOnlyRootFilesystem: true
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+
+  terminationGracePeriodSeconds: 10
+
+  tolerations: []
+
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  env: []
+
+  metrics:
+    enabled: true

@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "caddy.caddyFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "caddy.caddyLabels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.caddy.annotations | nindent 4 }}
+spec:
+  {{- if not .Values.caddy.autoscaling.enabled }}
+  replicas: {{ .Values.caddy.replicas }}
+  {{- end }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      {{- include "caddy.caddySelectorLabels" . | nindent 6 }}
+  strategy:
+    {{- toYaml .Values.caddy.strategy | nindent 4 }}
+  template:
+    metadata:
+      labels:
+        {{- include "caddy.caddyLabels" . | nindent 8 }}
+        {{- with .Values.caddy.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        checksum/config: {{ include "caddy.configChecksum" . }}
+        {{- if .Values.caddy.podAnnotations }}
+        {{- include "ContentRender" ( dict "value" .Values.caddy.podAnnotations "context" . ) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.caddy.serviceAccount.name | default (include "caddy.serviceAccountName" . ) }}
+      {{- if .Values.caddy.priorityClassName }}
+      priorityClassName: {{ .Values.caddy.priorityClassName }}
+      {{- end }}
+      {{- if .Values.caddy.securityContext.enabled }}
+      securityContext: {{- omit .Values.caddy.securityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- toYaml .Values.caddy.initContainers | nindent 8 }}
+      containers:
+        - name: caddy
+          {{- include "Image" .Values.global.image.caddy | nindent 10 }}
+          volumeMounts:
+            {{- if .Values.caddy.extraVolumeMounts }}
+            {{- toYaml .Values.caddy.extraVolumeMounts | nindent 12}}
+            {{- end }}
+            - name: main
+              mountPath: /etc/caddy
+            - name: blocks
+              mountPath: /etc/caddy/blocks
+          ports:
+            - name: http-metrics
+              containerPort: 8080
+              protocol: TCP  
+            {{- with .Values.config.server.httpListenPorts  }}
+            {{- range $i, $val := . }}
+            - name: http-{{ $i }}
+              containerPort: {{ $val }}
+            {{ end -}}
+            {{- end }}
+          startupProbe:
+            {{- toYaml .Values.caddy.startupProbe | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.caddy.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.caddy.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.caddy.resources | nindent 12 }}
+          {{- if .Values.caddy.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.caddy.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          env:
+            - name: BITNAMI_DEBUG
+              value: "false"
+            {{- if .Values.caddy.env }}
+            {{- include "ContentRender" ( dict "value" .Values.caddy.env "context" . ) | nindent 12 }}
+            {{- end }}
+      nodeSelector:
+        {{- toYaml .Values.caddy.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.caddy.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.caddy.tolerations | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.caddy.terminationGracePeriodSeconds }}
+      volumes:
+        {{- include "caddy.configVolume" . | nindent 8 }}
+        {{- if .Values.caddy.extraVolumes }}
+        {{- toYaml .Values.caddy.extraVolumes | nindent 8}}
+        {{- end }}
+
+
+
+      
+      

@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tns.appFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tns.appLabels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.app.annotations | nindent 4 }}
+spec:
+  replicas: {{ .Values.app.replicas }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      {{- include "tns.appSelectorLabels" . | nindent 6 }}
+  strategy:
+    {{- toYaml .Values.app.strategy | nindent 4 }}
+  template:
+    metadata:
+      labels:
+        {{- include "tns.appLabels" . | nindent 8 }}
+        {{- with .Values.app.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        {{- if .Values.app.podAnnotations }}
+        {{- include "ContentRender" ( dict "value" .Values.app.podAnnotations "context" . ) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.app.serviceAccount.name | default (include "tns.serviceAccountName" . ) }}
+      initContainers:
+        {{- toYaml .Values.app.initContainers | nindent 8 }}
+      containers:
+        - name: app
+          {{- include "Image" .Values.global.image.app | nindent 10 }}
+          args:
+            - -log.level=debug
+            - http://{{ include "tns.fullname" . }}-db.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}
+          ports:
+            - name: http-metrics
+              containerPort: 80
+          startupProbe:
+            {{- toYaml .Values.app.startupProbe | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.app.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.app.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.app.resources | nindent 12 }}
+          {{- if .Values.app.env }}
+          env:
+            {{- include "ContentRender" ( dict "value" .Values.app.env "context" . ) | nindent 12 }}
+          {{- end }}
+      nodeSelector:
+        {{- toYaml .Values.app.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.app.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.app.tolerations | nindent 8 }}
+      
+
+
+      
+      

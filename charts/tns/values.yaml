@@ -1,0 +1,273 @@
+global:
+  image:
+    app:
+      registry: ""
+      repository: grafana/tns-app
+      tag: latest
+      pullPolicy: IfNotPresent
+    db:
+      registry: ""
+      repository: grafana/tns-db
+      tag: latest
+      pullPolicy: IfNotPresent
+    loadgen:
+      registry: ""
+      repository: grafana/tns-loadgen
+      tag: latest
+      pullPolicy: IfNotPresent
+  clusterDomain: cluster.local
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+app:
+  replicas: 1
+
+  service:
+    annotations: {}
+    labels: {}
+
+  serviceAccount:
+    name:
+
+  resources: {}
+
+  # -- Additional Cortex container arguments, e.g. log.level (debug, info, warn, error)
+  extraArgs: {}
+
+  # -- Pod Labels
+  podLabels: {}
+
+  # -- Pod Annotations
+  podAnnotations: 
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '80'
+
+  nodeSelector: {}
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                    - app
+            topologyKey: 'kubernetes.io/hostname'
+
+  annotations: {}
+
+  startupProbe: 
+    tcpSocket:
+      port: http-metrics
+  livenessProbe:
+    tcpSocket:
+      port: http-metrics
+  readinessProbe: 
+    tcpSocket:
+      port: http-metrics
+
+  securityContext: {}
+
+  containerSecurityContext:
+    enabled: false
+    readOnlyRootFilesystem: true
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+
+  terminationGracePeriodSeconds: 10
+
+  tolerations: []
+
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  env: 
+    - name: JAEGER_AGENT_HOST
+      value: agent-agent.infrastore.svc.cluster.local
+    - name: JAEGER_TAGS
+      value: cluster=dev,namespace=infrastore
+    - name: JAEGER_SAMPLER_TYPE
+      value: const
+    - name: JAEGER_SAMPLER_PARAM
+      value: "1"
+
+db:
+  replicas: 1
+
+  service:
+    annotations: {}
+    labels: {}
+
+  serviceAccount:
+    name:
+
+  resources: {}
+
+  # -- Additional Cortex container arguments, e.g. log.level (debug, info, warn, error)
+  extraArgs: {}
+
+  # -- Pod Labels
+  podLabels: {}
+
+  # -- Pod Annotations
+  podAnnotations: 
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '80'
+
+  nodeSelector: {}
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                    - app
+            topologyKey: 'kubernetes.io/hostname'
+
+  annotations: {}
+
+  startupProbe: 
+    tcpSocket:
+      port: http-metrics
+  livenessProbe:
+    tcpSocket:
+      port: http-metrics
+  readinessProbe: 
+    tcpSocket:
+      port: http-metrics
+
+  securityContext: {}
+
+  containerSecurityContext:
+    enabled: false
+    readOnlyRootFilesystem: true
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+
+  terminationGracePeriodSeconds: 10
+
+  tolerations: []
+
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  env: 
+    - name: JAEGER_AGENT_HOST
+      value: agent-agent.infrastore.svc.cluster.local
+    - name: JAEGER_TAGS
+      value: cluster=dev,namespace=infrastore
+    - name: JAEGER_SAMPLER_TYPE
+      value: const
+    - name: JAEGER_SAMPLER_PARAM
+      value: "1"
+
+loadgen:
+  replicas: 1
+
+  service:
+    annotations: {}
+    labels: {}
+
+  serviceAccount:
+    name:
+
+  resources: {}
+
+  # -- Additional Cortex container arguments, e.g. log.level (debug, info, warn, error)
+  extraArgs: {}
+
+  # -- Pod Labels
+  podLabels: {}
+
+  # -- Pod Annotations
+  podAnnotations: 
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '80'
+
+  nodeSelector: {}
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                    - app
+            topologyKey: 'kubernetes.io/hostname'
+
+  annotations: {}
+
+  startupProbe: 
+    tcpSocket:
+      port: http-metrics
+  livenessProbe:
+    tcpSocket:
+      port: http-metrics
+  readinessProbe: 
+    tcpSocket:
+      port: http-metrics
+
+  securityContext: {}
+
+  containerSecurityContext:
+    enabled: false
+    readOnlyRootFilesystem: true
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+
+  terminationGracePeriodSeconds: 10
+
+  tolerations: []
+
+  podDisruptionBudget:
+    maxUnavailable: 1
+
+  initContainers: []
+  extraContainers: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  env: 
+    - name: JAEGER_AGENT_HOST
+      value: agent-agent.infrastore.svc.cluster.local
+    - name: JAEGER_TAGS
+      value: cluster=dev,namespace=infrastore
+    - name: JAEGER_SAMPLER_TYPE
+      value: const
+    - name: JAEGER_SAMPLER_PARAM
+      value: "1"

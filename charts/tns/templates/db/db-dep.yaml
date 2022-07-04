@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tns.dbFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tns.dbLabels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.db.annotations | nindent 4 }}
+spec:
+  replicas: {{ .Values.db.replicas }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      {{- include "tns.dbSelectorLabels" . | nindent 6 }}
+  strategy:
+    {{- toYaml .Values.db.strategy | nindent 4 }}
+  template:
+    metadata:
+      labels:
+        {{- include "tns.dbLabels" . | nindent 8 }}
+        {{- with .Values.db.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        {{- if .Values.db.podAnnotations }}
+        {{- include "ContentRender" ( dict "value" .Values.db.podAnnotations "context" . ) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.db.serviceAccount.name | default (include "tns.serviceAccountName" . ) }}
+      initContainers:
+        {{- toYaml .Values.db.initContainers | nindent 8 }}
+      containers:
+        - name: db
+          {{- include "Image" .Values.global.image.db | nindent 10 }}
+          args:
+            - -log.level=debug
+          ports:
+            - name: http-metrics
+              containerPort: 80
+          startupProbe:
+            {{- toYaml .Values.db.startupProbe | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.db.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.db.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.db.resources | nindent 12 }}
+          {{- if .Values.db.env }}
+          env:
+            {{- include "ContentRender" ( dict "value" .Values.db.env "context" . ) | nindent 12 }}
+          {{- end }}
+      nodeSelector:
+        {{- toYaml .Values.db.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.db.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.db.tolerations | nindent 8 }}
+      
+
+
+      
+      

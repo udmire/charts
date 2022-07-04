@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "tns.loadgenFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tns.loadgenLabels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.loadgen.annotations | nindent 4 }}
+spec:
+  replicas: {{ .Values.loadgen.replicas }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      {{- include "tns.loadgenSelectorLabels" . | nindent 6 }}
+  strategy:
+    {{- toYaml .Values.loadgen.strategy | nindent 4 }}
+  template:
+    metadata:
+      labels:
+        {{- include "tns.loadgenLabels" . | nindent 8 }}
+        {{- with .Values.loadgen.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        {{- if .Values.loadgen.podAnnotations }}
+        {{- include "ContentRender" ( dict "value" .Values.loadgen.podAnnotations "context" . ) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.loadgen.serviceAccount.name | default (include "tns.serviceAccountName" . ) }}
+      initContainers:
+        {{- toYaml .Values.loadgen.initContainers | nindent 8 }}
+      containers:
+        - name: loadgen
+          {{- include "Image" .Values.global.image.loadgen | nindent 10 }}
+          args:
+            - -log.level=debug
+            - http://{{ include "tns.fullname" . }}-app.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}
+          ports:
+            - name: http-metrics
+              containerPort: 80
+          startupProbe:
+            {{- toYaml .Values.loadgen.startupProbe | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.loadgen.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.loadgen.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.loadgen.resources | nindent 12 }}
+          {{- if .Values.loadgen.env }}
+          env:
+            {{- include "ContentRender" ( dict "value" .Values.loadgen.env "context" . ) | nindent 12 }}
+          {{- end }}
+      nodeSelector:
+        {{- toYaml .Values.loadgen.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.loadgen.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.loadgen.tolerations | nindent 8 }}
+      
+
+
+      
+      

@@ -1,0 +1,20 @@
+global:
+  # the default cluster domain suffix
+  clusterDomain: &defaultClusterDomain cluster.local
+
+config:
+  server:
+    httpListenPorts:
+      - 8888
+  serverBlocks: 
+    log: |-
+      # Loki Section
+      :{{- index .Values.config.server.httpListenPorts 0 }} {
+        handle /loki/api/v1/push {
+          reverse_proxy loki-write.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100
+        }
+        handle /loki/api/* {
+          reverse_proxy loki-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100;
+        }
+      }
+      
