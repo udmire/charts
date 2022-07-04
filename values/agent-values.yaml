@@ -49,5 +49,9 @@ agent:
       # mountPath: /var/lib/docker
       mountPath: /var/lib/docker/containers
       readOnly: true
+eventhandler:
+  enabled: true
+operator:
+  enabled: false
 scraper:
   enabled: false

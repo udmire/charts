@@ -48,7 +48,7 @@ spec:
             - /bin/agent
           args:
             - -config.file=/etc/agent/agent.yml
-            - -prometheus.wal-directory=/tmp/agent/data
+            - -server.http.address=0.0.0.0:{{ .Values.config.server.httpListenPort }}
           volumeMounts:
             {{- if .Values.agent.extraVolumeMounts }}
             {{- toYaml .Values.agent.extraVolumeMounts | nindent 12}}

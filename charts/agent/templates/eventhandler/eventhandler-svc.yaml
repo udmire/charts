@@ -1,0 +1,23 @@
+{{- if .Values.eventhandler.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "agent.eventhandlerFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "agent.eventhandlerLabels" . | nindent 4 }}
+    {{- with .Values.eventhandler.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- toYaml .Values.eventhandler.service.annotations | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.config.server.httpListenPort }}
+      protocol: TCP
+      name: http-metrics
+      targetPort: http-metrics
+  selector:
+    {{- include "agent.eventhandlerSelectorLabels" . | nindent 4 }}
+{{- end }}

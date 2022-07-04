@@ -6,7 +6,7 @@ global:
     mimir:
       registry: ""
       repository: grafana/mimir
-      tag: 2.0.0
+      tag: 2.1.0
       pullPolicy: IfNotPresent
   # -- Kubernetes cluster DNS domain
   clusterDomain: cluster.local
@@ -39,7 +39,7 @@ config:
       # url: http://_http-metrics._tcp.{{ .Release.Name }}-alertmanager.{{ .Release.Namespace }}-common/alertmanager/
       external_url: https://alertmanager.xx
   targets:
-    read: query-scheduler,query-frontend,querier,ruler,compactor
+    read: store-gateway,query-scheduler,query-frontend,querier,ruler,compactor
     write: distributor,ingester
 
 write:

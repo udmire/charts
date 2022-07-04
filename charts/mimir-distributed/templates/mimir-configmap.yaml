@@ -15,7 +15,7 @@ data:
       grpc_server_max_send_msg_size: 104857600
       grpc_server_max_concurrent_streams: 100000
     compactor:
-      data_dir: /data
+      data_dir: /data/compactor
       compaction_interval: 30m
       sharding_ring:
         kvstore:
@@ -78,8 +78,8 @@ data:
         bucket_index:
           enabled: true
         # cached section
-        index_cache:
         {{- if index .Values "memcached-blocks-index" "enabled" }}
+        index_cache:
           backend: memcached
           memcached:
             addresses: dns+{{ include "mimir.memcachedIndex" . }}.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:11211
@@ -87,8 +87,6 @@ data:
             max_async_buffer_size: 25000
             timeout: 200ms
             max_get_multi_batch_size: 100
-        {{- else }}
-          backend: inmemory
         {{- end }}
         {{- if index .Values "memcached-blocks-chunk" "enabled" }}
         chunks_cache:
@@ -145,7 +143,6 @@ data:
         kvstore:
           store: memberlist
           prefix: metrics/gateway/
-        tokens_file_path: /data/tokens
     memberlist:
       bind_port: {{ .Values.config.memberlist.bindPort }}
       # -- the service name of the memberlist

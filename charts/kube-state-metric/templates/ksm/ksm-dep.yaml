@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ksm.ksmFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ksm.ksmLabels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.ksm.annotations | nindent 4 }}
+spec:
+  replicas: {{ .Values.ksm.replicas }}
+  selector:
+    matchLabels:
+      {{- include "ksm.ksmSelectorLabels" . | nindent 6 }}
+  strategy:
+    {{- toYaml .Values.ksm.strategy | nindent 4 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ksm.ksmLabels" . | nindent 8 }}
+        {{- with .Values.ksm.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        {{- if .Values.ksm.podAnnotations }}
+        {{- include "ContentRender" ( dict "value" .Values.ksm.podAnnotations "context" . ) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.ksm.serviceAccount.name | default (include "ksm.serviceAccountName" . ) }}
+      containers:
+        - name: kube-state-metric
+          {{- include "Image" .Values.global.image.kube_state_metric | nindent 10 }}
+          args:
+            - --host=127.0.0.1
+            - --port=8081
+            - --telemetry-host=127.0.0.1
+            - --telemetry-port=8082
+            {{- range $key, $value := .Values.ksm.extraArgs }}
+            - "--{{ $key }}={{ $value }}"
+            {{- end }}
+          resources:
+            {{- toYaml .Values.ksm.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsUser: 65534
+          {{- with .Values.ksm.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        - name: kube-rbac-proxy-main
+          {{- include "Image" .Values.global.image.kube_rbac_proxy | nindent 10 }}
+          args:
+          - --logtostderr
+          - --secure-listen-address=:8443
+          - --tls-cipher-suites=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+          - --upstream=http://127.0.0.1:8081/
+          ports:
+          - containerPort: 8443
+            name: https-main
+          resources:
+            limits:
+              cpu: 40m
+              memory: 40Mi
+            requests:
+              cpu: 20m
+              memory: 20Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+        - name: kube-rbac-proxy-self
+          {{- include "Image" .Values.global.image.kube_rbac_proxy | nindent 10 }}
+          args:
+          - --logtostderr
+          - --secure-listen-address=:9443
+          - --tls-cipher-suites=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+          - --upstream=http://127.0.0.1:8082/
+          ports:
+          - containerPort: 9443
+            name: https-self
+          resources:
+            limits:
+              cpu: 20m
+              memory: 40Mi
+            requests:
+              cpu: 10m
+              memory: 20Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+      nodeSelector:
+        {{- toYaml .Values.ksm.nodeSelector | nindent 8 }}

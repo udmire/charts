@@ -3,8 +3,7 @@ global:
   clusterDomain: &defaultClusterDomain cluster.local
   image:
     grafana:
-      tag: latest
-
+      tag: 9.0.2
 grafana:
   replicas: 1
   env:
@@ -13,6 +12,9 @@ grafana:
 
 config:
   customIni: |-
+    [server]
+    root_url: http://grafana.mason/
+
     [plugins]
     enable_alpha = true
     [unified_alerting]
@@ -89,4 +91,4 @@ config:
       jsonData:
         implementation: 'prometheus'
 redis:
-  enabled: false
+  enabled: true

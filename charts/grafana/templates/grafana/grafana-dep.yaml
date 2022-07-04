@@ -86,7 +86,9 @@ spec:
             - name: GF_LOG_FILTERS
               value: rendering:debug
             {{- end }}
+            {{- if .Values.grafana.env }}
             {{- toYaml .Values.grafana.env | nindent 12 }}
+            {{- end }}
           {{- with .Values.grafana.lifecycle }}
           lifecycle:
             {{- toYaml . | nindent 12 }}

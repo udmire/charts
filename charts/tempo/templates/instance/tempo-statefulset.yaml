@@ -1,0 +1,144 @@
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "tempo.instanceFullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "tempo.instanceLabels" . | nindent 4 }}
+    app.kubernetes.io/part-of: memberlist
+  annotations:
+    {{- toYaml .Values.instance.annotations | nindent 4 }}
+spec:
+  {{- if not .Values.instance.autoscaling.enabled }}
+  replicas: {{ .Values.instance.replicas }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "tempo.instanceSelectorLabels" . | nindent 6 }}
+  updateStrategy:
+    {{- toYaml .Values.instance.statefulStrategy | nindent 4 }}          
+  podManagementPolicy: "{{ .Values.instance.statefulSet.podManagementPolicy }}"
+  serviceName: {{ template "tempo.instanceFullname" . }}-headless
+  {{- if .Values.instance.persistentVolume.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: storage
+        {{- if .Values.instance.persistentVolume.annotations }}
+        annotations:
+          {{ toYaml .Values.instance.persistentVolume.annotations | nindent 10 }}
+        {{- end }}
+      spec:
+        {{- if .Values.instance.persistentVolume.storageClass }}
+        {{- if (eq "-" .Values.instance.persistentVolume.storageClass) }}
+        storageClassName: ""
+        {{- else }}
+        storageClassName: "{{ .Values.instance.persistentVolume.storageClass }}"
+        {{- end }}
+        {{- end }}
+        accessModes:
+          {{ toYaml .Values.instance.persistentVolume.accessModes | nindent 10 }}
+        resources:
+          requests:
+            storage: "{{ .Values.instance.persistentVolume.size }}"
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- include "tempo.instanceLabels" . | nindent 8 }}
+        app.kubernetes.io/part-of: memberlist
+        {{- with .Values.instance.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        checksum/config: {{ include "tempo.configChecksum" . }}
+        {{- if .Values.instance.podAnnotations }}
+        {{- include "ContentRender" ( dict "value" .Values.instance.podAnnotations "context" . ) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.instance.serviceAccount.name | default (include "tempo.serviceAccountName" . ) }}
+      {{- if .Values.instance.priorityClassName }}
+      priorityClassName: {{ .Values.instance.priorityClassName }}
+      {{- end }}
+      {{- if .Values.instance.securityContext.enabled }}
+      securityContext: {{- omit .Values.instance.securityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- toYaml .Values.instance.initContainers | nindent 8 }}
+      nodeSelector:
+        {{- toYaml .Values.instance.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.instance.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.instance.tolerations | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.instance.terminationGracePeriodSeconds }}
+      volumes:
+        {{- include "tempo.configVolume" . | nindent 8 }}
+        - name: runtime-config
+          configMap:
+            name: {{ template "tempo.fullname" . }}-runtime-config
+        {{- if not .Values.instance.persistentVolume.enabled }}
+        - name: storage
+          emptyDir: {}
+        {{- end }}
+        {{- if .Values.instance.extraVolumes }}
+        {{- toYaml .Values.instance.extraVolumes | nindent 8 }}
+        {{- end }}
+      containers:
+        {{- if .Values.instance.extraContainers }}
+        {{- toYaml .Values.instance.extraContainers | nindent 8 }}
+        {{- end }}
+        - name: tempo
+          {{- include "Image" .Values.global.image.tempo | nindent 10 }}
+          args:
+            - -target=all
+            - -config.file=/etc/tempo/tempo.yaml
+            {{- range $key, $value := .Values.instance.extraArgs }}
+            - "-{{ $key }}={{ $value }}"
+            {{- end }}
+          volumeMounts:
+            {{- if .Values.instance.extraVolumeMounts }}
+            {{- toYaml .Values.instance.extraVolumeMounts | nindent 12}}
+            {{- end }}
+            - name: config
+              mountPath: /etc/tempo
+            - name: runtime-config
+              mountPath: /etc/tempo/runtime
+            - name: storage
+              mountPath: /data
+              {{- with .Values.instance.persistentVolume.subPath }}
+              subPath: {{ . }}
+              {{- end }}
+          ports:
+            - name: http-metrics
+              containerPort: {{ .Values.config.server.httpListenPort }}
+              protocol: TCP
+            - name: grpc
+              containerPort: {{ .Values.config.server.grpcListenPort }}
+              protocol: TCP
+            - name: gossip
+              containerPort: {{ .Values.config.memberlist.bindPort }}
+              protocol: TCP
+          {{- if .Values.instance.startupProbe }}
+          startupProbe:
+            {{- toYaml .Values.instance.startupProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.instance.livenessProbe }}
+          livenessProbe:
+            {{- toYaml .Values.instance.livenessProbe | nindent 12 }}
+          {{- end }}
+          readinessProbe:
+            {{- toYaml .Values.instance.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.instance.resources | nindent 12 }}
+          {{- if .Values.instance.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.instance.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.instance.env }}
+          env:
+            {{- toYaml .Values.instance.env | nindent 12 }}
+          {{- end }}
+          {{- with .Values.instance.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}

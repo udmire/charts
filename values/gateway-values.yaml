@@ -35,35 +35,56 @@ config:
       location = /loki/api/v1/push {
         proxy_pass http://loki-write.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
       }
+      location = /api/prom/push {
+        proxy_pass http://loki-write.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
+      }
+
       location = /loki/api/v1/tail {
         proxy_pass http://loki-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
-      }
-      location ~ /loki/api/v1/rules.* {
-        proxy_pass http://loki-read.{{ .Release.Name }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
-      }
-      location ~ /loki/api/.* {
-        proxy_pass http://loki-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
-      }
-      location = /api/prom/push {
-        proxy_pass http://loki-write.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
+        proxy_set_header X-Scope-OrgID $orgId;
       }
       location = /api/prom/tail {
         proxy_pass http://loki-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
+        proxy_set_header X-Scope-OrgID $orgId;
       }
-      location ~ /api/prom/rules.* {
+
+      location ~ /loki/api/.* {
         proxy_pass http://loki-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
       }
       location ~ /api/prom/.* {
         proxy_pass http://loki-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
       }
 
-      location  /distributor/ {
-        proxy_pass http://loki-write.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100/;
+      location ~ /prometheus/api/v1/alerts.* {
+        proxy_pass       http://loki-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
       }
+      location ~ /prometheus/api/v1/rules.* {
+        proxy_pass       http://loki-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
+      }
+
+      location ~ /compactor/.* {
+        proxy_pass       http://loki-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100/$request_uri;
+      }
+      location ~ /distributor/.* {
+        proxy_pass       http://loki-write.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100/$request_uri;
+      }
+      location ~ /ring {
+        proxy_pass       http://loki-write.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100/$request_uri;
+      }
+      location ~ /ingester/.* {
+        proxy_pass       http://loki-write.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100/$request_uri;
+      }
+      location ~ /ruler/.* {
+        proxy_pass       http://loki-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
+      }
+      location ~ /scheduler/.* {
+        proxy_pass       http://loki-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:3100$request_uri;
+      }
+
       # Log Section
       }
 
@@ -98,6 +119,15 @@ config:
         proxy_pass http://cortex-instance.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080/;
       }
       # Metric Section
+
+      # Alertmanager Section
+      location ~ /multitenant_alertmanager/.* {
+        proxy_pass http://alert-alertmanager-alertmanager.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
+      }
+      location ~ /alertmanager/.* {
+        proxy_pass http://alert-alertmanager-alertmanager.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
+      }
+      # Alertmanager Section
       }
 
     trace: |-
@@ -189,19 +219,47 @@ config:
       }
       proxy_set_header X-Scope-OrgID $orgId;
 
-      # Metric Section
-      location ~ /api/(v1|prom)/push {
+      # Distributor for push, all_user_stats, ha_tracker
+      location /api/v1/push {
         proxy_pass http://mimir-write.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
       }
-      location ~ /api/(v1|prom)/(rules|alerts).* {
-        proxy_pass http://mimir-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
+      location /distributor/ {
+        proxy_pass http://mimir-write.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080/;
       }
-      location ~ /api/(v1|prom)/.* {
+
+      # Ingester for flush, shutdown, ring
+      location /ingester/ {
+        proxy_pass http://mimir-write.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080/;
+      }
+
+      # Query for data
+      location ~ /prometheus/api/v1/(query|series|label|metadata|read|cardinality|status|).* {
         proxy_pass http://mimir-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
       }
 
-      location /distributor/ {
-        proxy_pass http://mimir-write.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080/;
+      # Querier for user_stats
+      location ~ /api/v1/user_stats {
+        proxy_pass http://mimir-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
+      }
+      # Ruler for ring, rule_groups
+      location ~ /ruler/.* {
+        proxy_pass http://mimir-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
+      }
+      # Ruler for prometheus rules
+      location ~ /prometheus/api/v1/(rules|alerts) {
+        proxy_pass http://mimir-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
+      }
+      # Ruler for rules
+      location ~ /prometheus/config/v1/rules.* {
+        proxy_pass http://mimir-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
+      }
+      # StoreGateway for ring, tenants
+      location ~ /store-gateway/.* {
+        proxy_pass http://mimir-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
+      }
+      # Comactor for ring
+      location ~ /compactor/.* {
+        proxy_pass http://mimir-read.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
       }
       # Metric Section
       }
@@ -226,7 +284,10 @@ config:
       location ~ /multitenant_alertmanager/.* {
         proxy_pass http://alertmimir-alertmanager-mimir-alertmanager.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
       }
-      location ~ /alertmanager/.* {
+      location ~ /alertmanager.* {
+        proxy_pass http://alertmimir-alertmanager-mimir-alertmanager.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
+      }
+      location /api/v1/alerts {
         proxy_pass http://alertmimir-alertmanager-mimir-alertmanager.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:8080$request_uri;
       }
       # Alertmanager Section

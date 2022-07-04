@@ -61,11 +61,12 @@ data:
       {{- else }}
       backend: filesystem
       filesystem:
-        dir: /data/rules
+        dir: /data/alerts
       {{- end }}
+      local:
+        path: /data/alertmanager/
     activity_tracker:
       filepath: /data/active-query-tracker.log
-    
   runtime_config.yaml: |-
     overrides: {}
   default_conf.yaml: |-

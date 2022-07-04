@@ -34,9 +34,9 @@ data:
         max_send_msg_size: 104857600
         grpc_compression: snappy
     frontend:
+      scheduler_address: {{ template "mimir.fullname" . }}-read-headless.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.server.grpcListenPort }}
       log_queries_longer_than: 10s
       align_queries_with_step: true
-      scheduler_address: {{ template "mimir.fullname" . }}-read-headless.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}:{{ .Values.config.server.grpcListenPort }}
       split_queries_by_interval: 24h
       {{- if index .Values "memcached-frontend" "enabled" }}
       cache_results: true
@@ -63,9 +63,9 @@ data:
         kvstore:
           store: memberlist
           prefix: metrics/ingester/
-        join_after: 10s
+        join_after: 0s
         observe_period: 10s
-        final_sleep: 10s
+        final_sleep: 0s
         num_tokens: 512
         tokens_file_path: /data/tokens
     limits: {}
@@ -142,7 +142,6 @@ data:
         kvstore:
           store: memberlist
           prefix: metrics/gateway/
-        tokens_file_path: /data/tokens
     memberlist:
       bind_port: {{ .Values.config.memberlist.bindPort }}
       # -- the service name of the memberlist

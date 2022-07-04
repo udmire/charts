@@ -1,3 +1,9 @@
 global:
   # the default cluster domain suffix
   clusterDomain: &defaultClusterDomain cluster.local
+
+config:
+  ruler:
+    alertmanager:
+      alertmanager_url: dnssrvnoa+http://_http-metrics._tcp.alertmimir-alertmanager-alertmanager-headless.{{ .Release.Namespace }}.svc.{{ .Values.global.clusterDomain }}/alertmanager
+      # url: http://_http-metrics._tcp.{{ .Release.Name }}-alertmanager.{{ .Release.Namespace }}-common/alertmanager/

@@ -118,7 +118,7 @@ alertmanager:
   securityContext: {}
 
   containerSecurityContext:
-    enabled: true
+    enabled: false
     readOnlyRootFilesystem: true
 
   # -- Tolerations for pod assignment

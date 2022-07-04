@@ -77,9 +77,12 @@ data:
       reject_old_samples: true
       reject_old_samples_max_age: 168h
       max_cache_freshness_per_query: 10m
+      split_queries_by_interval: 15m
+      ingestion_rate_mb: 40
+      ingestion_burst_size_mb: 60
     schema_config:
       configs:
-      - from: 2022-03-07
+      - from: 2022-03-15
         store: boltdb-shipper
         {{- if .Values.global.storage.backend }}
         {{- if eq .Values.global.storage.backend "s3"}}
@@ -90,7 +93,7 @@ data:
         {{- else }}
         object_store: filesystem
         {{- end }}
-        schema: v11
+        schema: v12
         index:
           prefix: loki_index_
           period: 24h
@@ -143,7 +146,6 @@ data:
     querier:
       query_ingesters_within: 2h
     query_range:
-      split_queries_by_interval: 15m
       align_queries_with_step: true
       max_retries: 5
       {{- if index .Values "memcached-frontend" "enabled" }}
@@ -159,6 +161,7 @@ data:
       {{- include "ContentRender" ( dict "value" .Values.config.ruler.alertmanager "context" . ) | nindent 6 }}
       {{- end }}
       enable_sharding: true
+      rule_path: /loki/rules
       ring:
         kvstore:
           store: memberlist
